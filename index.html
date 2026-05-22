@@ -1156,6 +1156,66 @@ document.querySelectorAll('.attr-box').forEach(box => {
   update();
 });
 
+
+// ========== Auto-fill skills & saves ==========
+const SKILL_ATTR_MAP = {
+  sv_forca: 'attr_forca',
+  sv_destreza: 'attr_destreza',
+  sv_constituicao: 'attr_constituicao',
+  sv_inteligencia: 'attr_inteligencia',
+  sv_sabedoria: 'attr_sabedoria',
+  sv_carisma: 'attr_carisma',
+  sk_acrobacia: 'attr_destreza',
+  sk_arcanismo: 'attr_inteligencia',
+  sk_atletismo: 'attr_forca',
+  sk_atuacao: 'attr_carisma',
+  sk_enganacao: 'attr_carisma',
+  sk_furtividade: 'attr_destreza',
+  sk_historia: 'attr_inteligencia',
+  sk_intimidacao: 'attr_carisma',
+  sk_intuicao: 'attr_sabedoria',
+  sk_investigacao: 'attr_inteligencia',
+  sk_animais: 'attr_sabedoria',
+  sk_medicina: 'attr_sabedoria',
+  sk_natureza: 'attr_inteligencia',
+  sk_percepcao: 'attr_sabedoria',
+  sk_persuasao: 'attr_carisma',
+  sk_prestidigitacao: 'attr_destreza',
+  sk_religiao: 'attr_inteligencia',
+  sk_sobrevivencia: 'attr_sabedoria',
+};
+
+function getProfBonus() {
+  const inp = document.querySelector('[name="prof_bonus"]');
+  const v = inp ? parseInt(inp.value) : 0;
+  return isNaN(v) ? 0 : v;
+}
+
+function recalcDerived() {
+  const profBonus = getProfBonus();
+  Object.entries(SKILL_ATTR_MAP).forEach(([base, attrName]) => {
+    const attrInp = document.querySelector('[name="' + attrName + '"]');
+    const profInp = document.querySelector('[name="' + base + '_p"]');
+    const valInp = document.querySelector('[name="' + base + '_v"]');
+    if (!attrInp || !profInp || !valInp) return;
+    if (attrInp.value === '' || attrInp.value === null) return; // don't write if no attribute set
+    const mod = calcMod(attrInp.value);
+    const total = mod + (profInp.checked ? profBonus : 0);
+    valInp.value = total;
+  });
+}
+
+// Wire triggers
+document.querySelectorAll('.attr-box input.val').forEach(inp => {
+  inp.addEventListener('input', () => { recalcDerived(); save(); });
+});
+Object.keys(SKILL_ATTR_MAP).forEach(base => {
+  const cb = document.querySelector('[name="' + base + '_p"]');
+  if (cb) cb.addEventListener('change', () => { recalcDerived(); save(); });
+});
+const _profInp = document.querySelector('[name="prof_bonus"]');
+if (_profInp) _profInp.addEventListener('input', () => { recalcDerived(); save(); });
+
 // ========== Attacks ==========
 function renderAttacks() {
   const tbody = document.getElementById('attacks-body');
@@ -1492,105 +1552,6 @@ document.getElementById('btn-clear').addEventListener('click', () => {
 // ========== Init ==========
 renderAttacks();
 renderHabilidades();
-renderSpellLevels();
-load();
-wireSave();
-</script>
-</body>
-</html>
-rTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); }
-    catch (e) { console.warn('save failed', e); }
-  }, 200);
-}
-
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    applyState(JSON.parse(raw));
-    return true;
-  } catch (e) { console.warn('load failed', e); return false; }
-}
-
-function wireSave() {
-  document.querySelectorAll('input[name], textarea[name], select[name]').forEach(el => {
-    const evt = el.type === 'checkbox' ? 'change' : 'input';
-    el.addEventListener(evt, save);
-  });
-}
-
-// ========== Toast ==========
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-// ========== Export / Import ==========
-document.getElementById('btn-export').addEventListener('click', () => {
-  const state = collectState();
-  const nome = (state.fields.nome_personagem || 'personagem').replace(/[^\w-]+/g, '_');
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `ficha_${nome}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('Ficha exportada');
-});
-
-document.getElementById('btn-import').addEventListener('click', () => {
-  document.getElementById('file-import').click();
-});
-document.getElementById('file-import').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const r = new FileReader();
-  r.onload = () => {
-    try {
-      const data = JSON.parse(r.result);
-      applyState(data);
-      save();
-      toast('Ficha importada');
-    } catch (err) {
-      toast('Erro ao importar JSON');
-    }
-  };
-  r.readAsText(file);
-  e.target.value = '';
-});
-
-document.getElementById('btn-clear').addEventListener('click', () => {
-  if (!confirm('Apagar todos os dados da ficha? Esta ação não pode ser desfeita.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  attacks = [];
-  habilidades = [];
-  spells = {};
-  SPELL_LEVELS.forEach(l => spells[l.lvl] = []);
-  document.querySelectorAll('input[name], textarea[name], select[name]').forEach(el => {
-    if (el.type === 'checkbox') el.checked = false;
-    else el.value = '';
-  });
-  renderAttacks();
-  renderHabilidades();
-  renderSpellLevels();
-  document.querySelectorAll('.attr-box input.val').forEach(inp => inp.dispatchEvent(new Event('input')));
-  toast('Ficha limpa');
-});
-
-// ========== Init ==========
-renderAttacks();
-renderHabilidades();
-renderSpellLevels();
-load();
-wireSave();
-</script>
-</body>
-</html>
-abilidades();
 renderSpellLevels();
 load();
 wireSave();
