@@ -198,43 +198,77 @@
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
   }
-  /* Ability cards (habilidades) */
-  .habilidades-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 12px;
-    padding: 4px;
+  /* Ability cards (habilidades) — free-form canvas */
+  .habilidades-canvas {
+    position: relative;
+    width: 100%;
+    min-height: 320px;
+    background-color: var(--bg-2);
+    background-image: radial-gradient(circle, rgba(212,175,55,0.10) 1px, transparent 1.2px);
+    background-size: 22px 22px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    margin-top: 4px;
+    overflow: auto;
   }
   .habilidade-card {
+    position: absolute;
     background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 12px;
-    position: relative;
-    transition: all 0.15s;
+    padding: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
     display: flex;
     flex-direction: column;
+    min-width: 200px;
+    min-height: 140px;
+    width: 290px;
+    height: 200px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    user-select: none;
+  }
+  .habilidade-card.dragging {
+    opacity: 0.92;
+    z-index: 1000;
+    box-shadow: 0 14px 36px rgba(0,0,0,0.6), 0 0 16px var(--gold-glow);
+    cursor: grabbing;
+    border-color: var(--gold);
   }
   .habilidade-card:hover {
     border-color: var(--gold-soft);
-    box-shadow: 0 0 14px rgba(212, 175, 55, 0.12);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.5), 0 0 14px rgba(212, 175, 55, 0.12);
   }
   .habilidade-card .top-row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
     border-bottom: 1px dashed var(--border);
+    flex-shrink: 0;
   }
+  .habilidade-card .drag-handle {
+    cursor: grab;
+    color: var(--text-mute);
+    padding: 2px 4px;
+    font-size: 14px;
+    line-height: 1;
+    user-select: none;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  .habilidade-card .drag-handle:hover { color: var(--gold); }
+  .habilidade-card .drag-handle:active { cursor: grabbing; }
   .habilidade-card .title-input {
     flex: 1;
     background: transparent;
     border: none;
     font-family: 'Georgia', serif;
-    font-size: 16px;
+    font-size: 15px;
     color: var(--gold);
     padding: 2px 4px;
+    user-select: text;
+    min-width: 0;
   }
   .habilidade-card .title-input:focus {
     box-shadow: none;
@@ -242,12 +276,26 @@
   }
   .habilidade-card textarea {
     width: 100%;
-    min-height: 90px;
+    flex: 1;
+    min-height: 0;
     font-size: 12px;
     line-height: 1.5;
     background: var(--bg-1);
-    resize: vertical;
+    resize: none;
+    user-select: text;
   }
+  .habilidade-card .resize-handle {
+    position: absolute;
+    right: 0; bottom: 0;
+    width: 16px; height: 16px;
+    cursor: nwse-resize;
+    background:
+      linear-gradient(135deg, transparent 0%, transparent 50%, var(--gold-soft) 52%, var(--gold-soft) 60%, transparent 62%, transparent 72%, var(--gold-soft) 74%, var(--gold-soft) 82%, transparent 84%);
+    border-bottom-right-radius: 10px;
+    opacity: 0.55;
+    transition: opacity 0.15s;
+  }
+  .habilidade-card .resize-handle:hover { opacity: 1; }
   .add-hab-btn {
     margin-top: 12px;
     display: block;
@@ -1006,12 +1054,14 @@
         <textarea name="equipamento" rows="6" placeholder="Liste seu equipamento..."></textarea>
       </div>
 
-      <div class="card">
-        <div class="card-title">Habilidades &amp; Características de Classe</div>
-        <div class="habilidades-grid" id="habilidades-grid"></div>
-        <button class="add-hab-btn" id="add-habilidade">+ Adicionar Habilidade</button>
-      </div>
     </div>
+  </div>
+
+  <div class="card" style="margin-top: 16px;">
+    <div class="card-title">Habilidades &amp; Características de Classe</div>
+    <div style="font-size: 11px; color: var(--text-mute); margin-bottom: 8px;">Arraste pelo ícone <span style="color: var(--gold);">⋮⋮</span> para mover. Use o canto inferior direito <span style="color: var(--gold-soft);">◢</span> para redimensionar.</div>
+    <div class="habilidades-canvas" id="habilidades-canvas"></div>
+    <button class="add-hab-btn" id="add-habilidade">+ Adicionar Habilidade</button>
   </div>
 
   <div class="card" style="margin-top: 16px;">
@@ -1252,23 +1302,64 @@ document.getElementById('add-attack').addEventListener('click', () => {
   save();
 });
 
-// ========== Habilidades ==========
+// ========== Habilidades (free-form canvas) ==========
+const HAB_DEFAULT_W = 290, HAB_DEFAULT_H = 200, HAB_GAP = 14;
+
+function autoPlace(idx, canvasWidth) {
+  const cols = Math.max(1, Math.floor((canvasWidth - HAB_GAP) / (HAB_DEFAULT_W + HAB_GAP)));
+  return {
+    x: HAB_GAP + (idx % cols) * (HAB_DEFAULT_W + HAB_GAP),
+    y: HAB_GAP + Math.floor(idx / cols) * (HAB_DEFAULT_H + HAB_GAP)
+  };
+}
+
+function resizeCanvas() {
+  const canvas = document.getElementById('habilidades-canvas');
+  if (!canvas) return;
+  let maxBottom = 320;
+  habilidades.forEach(h => {
+    const y = (typeof h.y === 'number') ? h.y : 0;
+    const ht = (typeof h.h === 'number') ? h.h : HAB_DEFAULT_H;
+    if (y + ht + HAB_GAP > maxBottom) maxBottom = y + ht + HAB_GAP;
+  });
+  canvas.style.minHeight = maxBottom + 'px';
+}
+
 function renderHabilidades() {
-  const grid = document.getElementById('habilidades-grid');
-  grid.innerHTML = '';
+  const canvas = document.getElementById('habilidades-canvas');
+  if (!canvas) return;
+  canvas.innerHTML = '';
+  const cw = canvas.clientWidth || 800;
   habilidades.forEach((h, i) => {
+    let x = (typeof h.x === 'number') ? h.x : null;
+    let y = (typeof h.y === 'number') ? h.y : null;
+    if (x === null || y === null) {
+      const p = autoPlace(i, cw);
+      x = p.x; y = p.y;
+    }
+    const w = (typeof h.w === 'number') ? h.w : HAB_DEFAULT_W;
+    const ht = (typeof h.h === 'number') ? h.h : HAB_DEFAULT_H;
     const card = document.createElement('div');
     card.className = 'habilidade-card';
+    card.style.left = x + 'px';
+    card.style.top = y + 'px';
+    card.style.width = w + 'px';
+    card.style.height = ht + 'px';
+    card.dataset.habIdx = i;
     card.innerHTML = `
       <div class="top-row">
+        <span class="drag-handle" title="Arrastar">⋮⋮</span>
         <input type="text" class="title-input" placeholder="Título da habilidade" data-hab-i="${i}" data-hab-k="titulo" value="${escapeHtml(h.titulo||'')}">
         <button class="icon-btn del" data-del-hab="${i}" title="Remover habilidade">✕</button>
       </div>
       <textarea placeholder="Descrição..." data-hab-i="${i}" data-hab-k="descricao">${escapeHtml(h.descricao||'')}</textarea>
+      <div class="resize-handle" title="Redimensionar"></div>
     `;
-    grid.appendChild(card);
+    canvas.appendChild(card);
   });
-  grid.querySelectorAll('[data-hab-i]').forEach(inp => {
+
+  // Wire text inputs
+  canvas.querySelectorAll('[data-hab-i]').forEach(inp => {
     inp.addEventListener('input', e => {
       const i = parseInt(e.target.dataset.habI);
       const k = e.target.dataset.habK;
@@ -1276,21 +1367,111 @@ function renderHabilidades() {
       save();
     });
   });
-  grid.querySelectorAll('[data-del-hab]').forEach(btn => {
+  // Delete
+  canvas.querySelectorAll('[data-del-hab]').forEach(btn => {
     btn.addEventListener('click', e => {
       habilidades.splice(parseInt(e.currentTarget.dataset.delHab), 1);
       renderHabilidades();
       save();
     });
   });
+  // Drag
+  canvas.querySelectorAll('.habilidade-card').forEach(card => {
+    const handle = card.querySelector('.drag-handle');
+    handle.addEventListener('pointerdown', startDrag);
+    const resize = card.querySelector('.resize-handle');
+    resize.addEventListener('pointerdown', startResize);
+  });
+
+  resizeCanvas();
 }
+
+function startDrag(e) {
+  e.preventDefault();
+  const card = e.currentTarget.closest('.habilidade-card');
+  const idx = parseInt(card.dataset.habIdx);
+  const canvas = document.getElementById('habilidades-canvas');
+  const canvasRect = canvas.getBoundingClientRect();
+  const startX = e.clientX, startY = e.clientY;
+  const startLeft = card.offsetLeft, startTop = card.offsetTop;
+  card.classList.add('dragging');
+  e.currentTarget.setPointerCapture(e.pointerId);
+
+  function move(ev) {
+    let nx = startLeft + (ev.clientX - startX);
+    let ny = startTop + (ev.clientY - startY);
+    if (nx < 0) nx = 0;
+    if (ny < 0) ny = 0;
+    const maxX = canvas.clientWidth - card.offsetWidth;
+    if (nx > maxX) nx = Math.max(0, maxX);
+    card.style.left = nx + 'px';
+    card.style.top = ny + 'px';
+  }
+  function up(ev) {
+    e.currentTarget.removeEventListener('pointermove', move);
+    e.currentTarget.removeEventListener('pointerup', up);
+    e.currentTarget.removeEventListener('pointercancel', up);
+    card.classList.remove('dragging');
+    habilidades[idx].x = card.offsetLeft;
+    habilidades[idx].y = card.offsetTop;
+    resizeCanvas();
+    save();
+  }
+  e.currentTarget.addEventListener('pointermove', move);
+  e.currentTarget.addEventListener('pointerup', up);
+  e.currentTarget.addEventListener('pointercancel', up);
+}
+
+function startResize(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const handle = e.currentTarget;
+  const card = handle.closest('.habilidade-card');
+  const idx = parseInt(card.dataset.habIdx);
+  const startX = e.clientX, startY = e.clientY;
+  const startW = card.offsetWidth, startH = card.offsetHeight;
+  handle.setPointerCapture(e.pointerId);
+
+  function move(ev) {
+    let nw = startW + (ev.clientX - startX);
+    let nh = startH + (ev.clientY - startY);
+    if (nw < 200) nw = 200;
+    if (nh < 140) nh = 140;
+    card.style.width = nw + 'px';
+    card.style.height = nh + 'px';
+  }
+  function up(ev) {
+    handle.removeEventListener('pointermove', move);
+    handle.removeEventListener('pointerup', up);
+    handle.removeEventListener('pointercancel', up);
+    habilidades[idx].w = card.offsetWidth;
+    habilidades[idx].h = card.offsetHeight;
+    resizeCanvas();
+    save();
+  }
+  handle.addEventListener('pointermove', move);
+  handle.addEventListener('pointerup', up);
+  handle.addEventListener('pointercancel', up);
+}
+
 document.getElementById('add-habilidade').addEventListener('click', () => {
-  habilidades.push({ titulo: '', descricao: '' });
+  // Place new card at auto position for the new index
+  const canvas = document.getElementById('habilidades-canvas');
+  const cw = canvas ? canvas.clientWidth : 800;
+  const pos = autoPlace(habilidades.length, cw);
+  habilidades.push({ titulo: '', descricao: '', x: pos.x, y: pos.y, w: HAB_DEFAULT_W, h: HAB_DEFAULT_H });
   renderHabilidades();
   save();
   // focus the new title input
-  const inputs = document.querySelectorAll('#habilidades-grid .title-input');
+  const inputs = document.querySelectorAll('#habilidades-canvas .title-input');
   if (inputs.length) inputs[inputs.length - 1].focus();
+});
+
+// Re-render on window resize so auto-placed cards reflow
+window.addEventListener('resize', () => {
+  // Only reflow if some cards are unplaced; placed cards keep their position
+  // We still call render to update canvas height
+  renderHabilidades();
 });
 
 // ========== Spells ==========
