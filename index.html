@@ -202,7 +202,8 @@
   .habilidades-canvas {
     position: relative;
     width: 100%;
-    min-height: 320px;
+    height: 320px;
+    min-height: 220px;
     background-color: var(--bg-2);
     background-image: radial-gradient(circle, rgba(212,175,55,0.10) 1px, transparent 1.2px);
     background-size: 22px 22px;
@@ -210,6 +211,7 @@
     border-radius: 8px;
     margin-top: 4px;
     overflow: auto;
+    resize: vertical;
   }
   .habilidade-card {
     position: absolute;
@@ -246,7 +248,9 @@
     padding-bottom: 6px;
     border-bottom: 1px dashed var(--border);
     flex-shrink: 0;
+    cursor: grab;
   }
+  .habilidade-card .top-row:active { cursor: grabbing; }
   .habilidade-card .drag-handle {
     cursor: grab;
     color: var(--text-mute);
@@ -274,6 +278,8 @@
     box-shadow: none;
     border-bottom: 1px solid var(--gold);
   }
+  .habilidade-card .title-input { cursor: text; }
+  .habilidade-card .top-row .icon-btn { cursor: pointer; }
   .habilidade-card textarea {
     width: 100%;
     flex: 1;
@@ -1178,6 +1184,7 @@ const ICONS = {
 // ========== State (dynamic lists) ==========
 let attacks = [];
 let habilidades = [];
+let habCanvasHeight = 320;
 let spells = {}; // { 0: [...], 1: [...], ... }
 SPELL_LEVELS.forEach(l => spells[l.lvl] = []);
 
@@ -1316,13 +1323,43 @@ function autoPlace(idx, canvasWidth) {
 function resizeCanvas() {
   const canvas = document.getElementById('habilidades-canvas');
   if (!canvas) return;
-  let maxBottom = 320;
+  let maxBottom = 220;
   habilidades.forEach(h => {
     const y = (typeof h.y === 'number') ? h.y : 0;
     const ht = (typeof h.h === 'number') ? h.h : HAB_DEFAULT_H;
     if (y + ht + HAB_GAP > maxBottom) maxBottom = y + ht + HAB_GAP;
   });
+  // Always keep enough scrollable space for cards, but don't shrink the user's manual height
   canvas.style.minHeight = maxBottom + 'px';
+}
+
+// Apply saved canvas height (set by user dragging the resize handle)
+function applyCanvasHeight() {
+  const canvas = document.getElementById('habilidades-canvas');
+  if (!canvas) return;
+  if (typeof habCanvasHeight === 'number' && habCanvasHeight > 0) {
+    canvas.style.height = habCanvasHeight + 'px';
+  }
+}
+
+// Watch for user resize via the native resize handle and persist
+let _canvasResizeObserver = null;
+function watchCanvasResize() {
+  const canvas = document.getElementById('habilidades-canvas');
+  if (!canvas || _canvasResizeObserver) return;
+  if (typeof ResizeObserver === 'undefined') return;
+  let lastH = canvas.offsetHeight;
+  _canvasResizeObserver = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const nh = Math.round(entry.contentRect.height);
+      if (Math.abs(nh - lastH) > 2) {
+        lastH = nh;
+        habCanvasHeight = nh;
+        save();
+      }
+    }
+  });
+  _canvasResizeObserver.observe(canvas);
 }
 
 function renderHabilidades() {
@@ -1375,10 +1412,10 @@ function renderHabilidades() {
       save();
     });
   });
-  // Drag
+  // Drag from the whole top-row (skips inputs/buttons via startDrag check)
   canvas.querySelectorAll('.habilidade-card').forEach(card => {
-    const handle = card.querySelector('.drag-handle');
-    handle.addEventListener('pointerdown', startDrag);
+    const topRow = card.querySelector('.top-row');
+    topRow.addEventListener('pointerdown', startDrag);
     const resize = card.querySelector('.resize-handle');
     resize.addEventListener('pointerdown', startResize);
   });
@@ -1386,73 +1423,98 @@ function renderHabilidades() {
   resizeCanvas();
 }
 
+// Global drag/resize state — document-level events for reliability
+let _drag = null;
+
 function startDrag(e) {
+  // Skip if clicking on interactive children (input, button, textarea)
+  if (e.target.closest('input, textarea, button, .resize-handle')) return;
+  // Only left mouse button
+  if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
   const card = e.currentTarget.closest('.habilidade-card');
-  const idx = parseInt(card.dataset.habIdx);
+  if (!card) return;
   const canvas = document.getElementById('habilidades-canvas');
-  const canvasRect = canvas.getBoundingClientRect();
-  const startX = e.clientX, startY = e.clientY;
-  const startLeft = card.offsetLeft, startTop = card.offsetTop;
+  _drag = {
+    type: 'move',
+    card,
+    canvas,
+    idx: parseInt(card.dataset.habIdx),
+    startX: e.clientX,
+    startY: e.clientY,
+    startLeft: card.offsetLeft,
+    startTop: card.offsetTop,
+    startScrollTop: canvas.scrollTop,
+    startScrollLeft: canvas.scrollLeft
+  };
   card.classList.add('dragging');
-  e.currentTarget.setPointerCapture(e.pointerId);
-
-  function move(ev) {
-    let nx = startLeft + (ev.clientX - startX);
-    let ny = startTop + (ev.clientY - startY);
-    if (nx < 0) nx = 0;
-    if (ny < 0) ny = 0;
-    const maxX = canvas.clientWidth - card.offsetWidth;
-    if (nx > maxX) nx = Math.max(0, maxX);
-    card.style.left = nx + 'px';
-    card.style.top = ny + 'px';
-  }
-  function up(ev) {
-    e.currentTarget.removeEventListener('pointermove', move);
-    e.currentTarget.removeEventListener('pointerup', up);
-    e.currentTarget.removeEventListener('pointercancel', up);
-    card.classList.remove('dragging');
-    habilidades[idx].x = card.offsetLeft;
-    habilidades[idx].y = card.offsetTop;
-    resizeCanvas();
-    save();
-  }
-  e.currentTarget.addEventListener('pointermove', move);
-  e.currentTarget.addEventListener('pointerup', up);
-  e.currentTarget.addEventListener('pointercancel', up);
 }
 
 function startResize(e) {
+  if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
   e.stopPropagation();
-  const handle = e.currentTarget;
-  const card = handle.closest('.habilidade-card');
-  const idx = parseInt(card.dataset.habIdx);
-  const startX = e.clientX, startY = e.clientY;
-  const startW = card.offsetWidth, startH = card.offsetHeight;
-  handle.setPointerCapture(e.pointerId);
+  const card = e.currentTarget.closest('.habilidade-card');
+  if (!card) return;
+  const canvas = document.getElementById('habilidades-canvas');
+  _drag = {
+    type: 'resize',
+    card,
+    canvas,
+    idx: parseInt(card.dataset.habIdx),
+    startX: e.clientX,
+    startY: e.clientY,
+    startW: card.offsetWidth,
+    startH: card.offsetHeight,
+    startScrollTop: canvas.scrollTop,
+    startScrollLeft: canvas.scrollLeft
+  };
+}
 
-  function move(ev) {
-    let nw = startW + (ev.clientX - startX);
-    let nh = startH + (ev.clientY - startY);
+function onPointerMove(e) {
+  if (!_drag) return;
+  e.preventDefault();
+  const { type, card, canvas } = _drag;
+  // Compensate for any canvas scrolling that happened mid-drag
+  const scrollDX = canvas.scrollLeft - _drag.startScrollLeft;
+  const scrollDY = canvas.scrollTop - _drag.startScrollTop;
+  if (type === 'move') {
+    let nx = _drag.startLeft + (e.clientX - _drag.startX) + scrollDX;
+    let ny = _drag.startTop + (e.clientY - _drag.startY) + scrollDY;
+    if (nx < 0) nx = 0;
+    if (ny < 0) ny = 0;
+    card.style.left = nx + 'px';
+    card.style.top = ny + 'px';
+  } else if (type === 'resize') {
+    let nw = _drag.startW + (e.clientX - _drag.startX) + scrollDX;
+    let nh = _drag.startH + (e.clientY - _drag.startY) + scrollDY;
     if (nw < 200) nw = 200;
     if (nh < 140) nh = 140;
     card.style.width = nw + 'px';
     card.style.height = nh + 'px';
   }
-  function up(ev) {
-    handle.removeEventListener('pointermove', move);
-    handle.removeEventListener('pointerup', up);
-    handle.removeEventListener('pointercancel', up);
+}
+
+function onPointerUp(e) {
+  if (!_drag) return;
+  const { type, card, idx } = _drag;
+  card.classList.remove('dragging');
+  if (type === 'move') {
+    habilidades[idx].x = card.offsetLeft;
+    habilidades[idx].y = card.offsetTop;
+  } else if (type === 'resize') {
     habilidades[idx].w = card.offsetWidth;
     habilidades[idx].h = card.offsetHeight;
-    resizeCanvas();
-    save();
   }
-  handle.addEventListener('pointermove', move);
-  handle.addEventListener('pointerup', up);
-  handle.addEventListener('pointercancel', up);
+  _drag = null;
+  resizeCanvas();
+  save();
 }
+
+// Attach document-level listeners ONCE (not per card)
+document.addEventListener('pointermove', onPointerMove);
+document.addEventListener('pointerup', onPointerUp);
+document.addEventListener('pointercancel', onPointerUp);
 
 document.getElementById('add-habilidade').addEventListener('click', () => {
   // Place new card at auto position for the new index
@@ -1612,7 +1674,7 @@ function escapeHtml(s) {
 
 // ========== Save / Load ==========
 function collectState() {
-  const state = { fields: {}, attacks: attacks, habilidades: habilidades, spells: spells };
+  const state = { fields: {}, attacks: attacks, habilidades: habilidades, habCanvasHeight: habCanvasHeight, spells: spells };
   document.querySelectorAll('input[name], textarea[name], select[name]').forEach(el => {
     if (el.type === 'checkbox') state.fields[el.name] = el.checked;
     else state.fields[el.name] = el.value;
@@ -1635,6 +1697,8 @@ function applyState(state) {
   }
   attacks = Array.isArray(state.attacks) ? state.attacks : [];
   habilidades = Array.isArray(state.habilidades) ? state.habilidades : [];
+  habCanvasHeight = (typeof state.habCanvasHeight === 'number' && state.habCanvasHeight > 0) ? state.habCanvasHeight : 320;
+  applyCanvasHeight();
   spells = (state.spells && typeof state.spells === 'object') ? state.spells : {};
   SPELL_LEVELS.forEach(l => { if (!Array.isArray(spells[l.lvl])) spells[l.lvl] = []; });
   renderAttacks();
@@ -1717,6 +1781,7 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   localStorage.removeItem(STORAGE_KEY);
   attacks = [];
   habilidades = [];
+  habCanvasHeight = 320;
   spells = {};
   SPELL_LEVELS.forEach(l => spells[l.lvl] = []);
   document.querySelectorAll('input[name], textarea[name], select[name]').forEach(el => {
@@ -1735,6 +1800,8 @@ renderAttacks();
 renderHabilidades();
 renderSpellLevels();
 load();
+applyCanvasHeight();
+watchCanvasResize();
 wireSave();
 </script>
 </body>
