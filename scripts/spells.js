@@ -4,6 +4,49 @@ const SPELL_CLASS_LABELS_LOCAL = window.SPELL_CLASS_LABELS || {};
 const SPELL_CLASS_ORDER = ['barbaro', 'bardo', 'bruxo', 'clerigo', 'druida', 'feiticeiro', 'guerreiro', 'ladino', 'mago', 'monge', 'paladino', 'ranger'];
 const FULL_CASTER_CLASSES = new Set(['bardo', 'clerigo', 'druida', 'feiticeiro', 'mago']);
 const NON_CASTER_CLASSES = new Set(['barbaro', 'guerreiro', 'ladino', 'monge']);
+const FULL_CASTER_SLOT_TABLE = {
+  1: [2],
+  2: [3],
+  3: [4, 2],
+  4: [4, 3],
+  5: [4, 3, 2],
+  6: [4, 3, 3],
+  7: [4, 3, 3, 1],
+  8: [4, 3, 3, 2],
+  9: [4, 3, 3, 3, 1],
+  10: [4, 3, 3, 3, 2],
+  11: [4, 3, 3, 3, 2, 1],
+  12: [4, 3, 3, 3, 2, 1],
+  13: [4, 3, 3, 3, 2, 1, 1],
+  14: [4, 3, 3, 3, 2, 1, 1],
+  15: [4, 3, 3, 3, 2, 1, 1, 1],
+  16: [4, 3, 3, 3, 2, 1, 1, 1],
+  17: [4, 3, 3, 3, 2, 1, 1, 1, 1],
+  18: [4, 3, 3, 3, 3, 1, 1, 1, 1],
+  19: [4, 3, 3, 3, 3, 2, 1, 1, 1],
+  20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
+};
+const HALF_CASTER_SLOT_TABLE = {
+  2: [2],
+  3: [3],
+  4: [3],
+  5: [4, 2],
+  6: [4, 2],
+  7: [4, 3],
+  8: [4, 3],
+  9: [4, 3, 2],
+  10: [4, 3, 2],
+  11: [4, 3, 3],
+  12: [4, 3, 3],
+  13: [4, 3, 3, 1],
+  14: [4, 3, 3, 1],
+  15: [4, 3, 3, 2],
+  16: [4, 3, 3, 2],
+  17: [4, 3, 3, 3, 1],
+  18: [4, 3, 3, 3, 1],
+  19: [4, 3, 3, 3, 2],
+  20: [4, 3, 3, 3, 2],
+};
 const CLASS_DISPLAY_LABELS = {
   barbaro: 'Bárbaro',
   bardo: 'Bardo',
@@ -89,8 +132,9 @@ function initSpellControls() {
   });
   const search = document.getElementById('spell-search');
   if (search) search.addEventListener('input', () => { renderSpellLevels(); save(); });
-  const hideUnprepared = document.getElementById('spell-hide-unprepared');
-  if (hideUnprepared) hideUnprepared.addEventListener('change', () => { renderSpellLevels(); save(); });
+  document.querySelectorAll('[data-hide-unprepared-kind]').forEach(input => {
+    input.addEventListener('change', () => { renderSpellLevels(); save(); });
+  });
   syncSpellClassMirror();
 }
 
@@ -144,7 +188,7 @@ function applyCharacterClassState(fields = {}) {
 
 function getCharacterClassLabel() {
   const cls = getSelectedSpellClass();
-  if (isOfficialSpellClass(cls)) return SPELL_CLASS_LABELS_LOCAL[cls] || cls;
+  if (isOfficialSpellClass(cls)) return SPELL_CLASS_LABELS_LOCAL[cls] || CLASS_DISPLAY_LABELS[cls] || cls;
   const customName = document.getElementById('character-custom-class');
   return (customName && customName.value.trim()) || 'Classe customizada';
 }
@@ -219,9 +263,40 @@ function getSpellSearch() {
   return normalizeText(input ? input.value : '');
 }
 
-function shouldHideUnprepared() {
-  const input = document.getElementById('spell-hide-unprepared');
-  return !!(input && input.checked);
+function shouldHideUnprepared(type = 'any') {
+  const official = document.getElementById('spell-hide-unprepared-official');
+  const custom = document.getElementById('spell-hide-unprepared-custom');
+  const legacy = document.getElementById('spell-hide-unprepared');
+  if (type === 'official') return !!((official && official.checked) || (legacy && legacy.checked));
+  if (type === 'custom') return !!((custom && custom.checked) || (legacy && legacy.checked));
+  return shouldHideUnprepared('official') || shouldHideUnprepared('custom');
+}
+
+function getAutoSlotTotals() {
+  const cls = getSelectedSpellClass();
+  const level = getClassLevel();
+  if (FULL_CASTER_CLASSES.has(cls)) return FULL_CASTER_SLOT_TABLE[level] || [];
+  if (cls === 'paladino' || cls === 'ranger') return HALF_CASTER_SLOT_TABLE[level] || [];
+  if (cls === 'bruxo') {
+    const slotLevel = level >= 9 ? 5 : Math.max(1, Math.ceil(level / 2));
+    const slotCount = level >= 17 ? 4 : level >= 11 ? 3 : level >= 2 ? 2 : 1;
+    const totals = [];
+    totals[slotLevel - 1] = slotCount;
+    return totals;
+  }
+  return [];
+}
+
+function getAutoSlotTotal(lvl) {
+  if (!lvl) return '';
+  const totals = getAutoSlotTotals();
+  return totals[lvl - 1] || '';
+}
+
+function getSlotTotalValue(lvl) {
+  const slot = spells._slots && spells._slots[lvl];
+  if (slot && slot.total !== undefined && slot.total !== null && String(slot.total) !== '') return slot.total;
+  return getAutoSlotTotal(lvl);
 }
 
 function spellMatchesQuery(sp, query) {
@@ -255,6 +330,7 @@ function getVisibleSpellLevels() {
   ensureSpellState();
   const cls = getSelectedSpellClass();
   if (!isOfficialSpellClass(cls)) return SPELL_LEVELS;
+  if (NON_CASTER_CLASSES.has(cls)) return SPELL_LEVELS;
   const allowed = allowedSpellLevelsForClass(cls, getClassLevel());
   return SPELL_LEVELS.filter(lv => {
     if (allowed.has(lv.lvl)) return true;
@@ -284,6 +360,9 @@ function renderSpellLevels() {
     const section = document.createElement('div');
     section.className = 'spell-level-section';
     const isCantrip = lv.lvl === 0;
+    const autoSlotTotal = getAutoSlotTotal(lv.lvl);
+    const slotTotalValue = getSlotTotalValue(lv.lvl);
+    const hasManualSlotTotal = !!(spells._slots && spells._slots[lv.lvl] && spells._slots[lv.lvl].total !== undefined && spells._slots[lv.lvl].total !== null && String(spells._slots[lv.lvl].total) !== '');
     section.innerHTML = `
       <div class="spell-level-header">
         <div class="spell-level-title">
@@ -296,7 +375,8 @@ function renderSpellLevels() {
         ${isCantrip ? '' : `
           <div class="slot-tracker">
             <span>Total</span>
-            <input type="number" data-slot-total="${lv.lvl}" value="${(spells._slots && spells._slots[lv.lvl]?.total) || ''}">
+            <input type="number" data-slot-total="${lv.lvl}" value="${escapeHtml(slotTotalValue)}" placeholder="${escapeHtml(autoSlotTotal)}">
+            ${autoSlotTotal && !hasManualSlotTotal ? '<span class="slot-auto-chip">Auto</span>' : ''}
             <span>Usados</span>
             <input type="number" data-slot-used="${lv.lvl}" value="${(spells._slots && spells._slots[lv.lvl]?.used) || ''}">
           </div>
@@ -313,7 +393,7 @@ function renderSpellLevels() {
   container.querySelectorAll('[data-add-spell]').forEach(btn => {
     btn.addEventListener('click', e => {
       const lvl = parseInt(e.target.dataset.addSpell);
-      spells[lvl].push(newSpell(shouldHideUnprepared()));
+      spells[lvl].push(newSpell(shouldHideUnprepared('custom')));
       renderSpellLevels();
       save();
       const inputs = document.querySelectorAll(`[data-sp-l="${lvl}"][data-sp-k="nome"]`);
@@ -381,7 +461,7 @@ function renderSpellCards(lvl) {
     .map((sp, i) => customSpellCard(sp, i, lvl))
     .filter(card => customSpellMatchesQuery(card.spell, query));
   const hideUnprepared = shouldHideUnprepared();
-  const cards = officialCards.concat(customCards).filter(card => !hideUnprepared || card.prepared).sort((a, b) => {
+  const cards = officialCards.concat(customCards).filter(card => !shouldHideUnprepared(card.type) || card.prepared).sort((a, b) => {
     if (a.prepared !== b.prepared) return a.prepared ? -1 : 1;
     if (a.type !== b.type) return a.type === 'official' ? -1 : 1;
     return a.name.localeCompare(b.name, 'pt-BR');
@@ -389,7 +469,7 @@ function renderSpellCards(lvl) {
   if (!cards.length) {
     const empty = document.createElement('div');
     empty.className = 'spell-empty';
-    empty.textContent = hideUnprepared ? 'Nenhuma magia preparada neste círculo.' : 'Nenhuma magia neste círculo.';
+    empty.textContent = hideUnprepared ? 'Nenhuma magia preparada visível neste círculo.' : 'Nenhuma magia neste círculo.';
     wrap.appendChild(empty);
     return;
   }
@@ -460,7 +540,10 @@ function renderCustomSpellCard(wrap, sp, i, lvl) {
         <span class="lbl">Material:</span>
         <input type="text" placeholder="componentes materiais (opcional)" data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="material" value="${escapeHtml(sp.material)}">
       </div>
-      <textarea placeholder="Descrição da magia..." data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="descricao">${escapeHtml(sp.descricao)}</textarea>
+      <details class="spell-description custom-description">
+        <summary>Descrição</summary>
+        <textarea placeholder="Descrição da magia..." data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="descricao">${escapeHtml(sp.descricao)}</textarea>
+      </details>
       <div class="card-actions">
         <label class="prepared-toggle">
           <input type="checkbox" data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="preparada" ${sp.preparada ? 'checked' : ''}>
@@ -510,7 +593,10 @@ function renderSpellSummary() {
   const visibleOfficial = official ? OFFICIAL_SPELLS.filter(sp => allowed.has(sp.nivel) && sp.classes.includes(cls)) : [];
   const preparedOfficial = visibleOfficial.filter(sp => isOfficialPrepared(sp.id)).length;
   const preparedCustom = SPELL_LEVELS.reduce((acc, lv) => acc + (spells[lv.lvl] || []).filter(sp => sp.preparada).length, 0);
-  const hideUnprepared = shouldHideUnprepared();
+  const hiddenCategories = [
+    shouldHideUnprepared('official') ? 'oficiais' : '',
+    shouldHideUnprepared('custom') ? 'personalizadas' : '',
+  ].filter(Boolean);
   const maxLevel = allowed.size ? Math.max(...Array.from(allowed)) : 0;
   const classLabel = getCharacterClassLabel();
   const maxText = official
@@ -522,7 +608,7 @@ function renderSpellSummary() {
     <span class="spell-chip">${escapeHtml(maxText)}</span>
     <span class="spell-chip">Oficiais <strong>${visibleOfficial.length}</strong></span>
     <span class="spell-chip">Preparadas <strong>${preparedOfficial + preparedCustom}</strong></span>
-    ${hideUnprepared ? '<span class="spell-chip muted">Ocultando não preparadas</span>' : ''}
+    ${hiddenCategories.length ? `<span class="spell-chip muted">Ocultando não preparadas: ${escapeHtml(hiddenCategories.join(', '))}</span>` : ''}
     ${official ? '' : '<span class="spell-chip muted">Personalizada</span>'}
   `;
 }

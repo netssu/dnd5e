@@ -20,6 +20,12 @@ function applyState(state) {
       if (el.type === 'checkbox') el.checked = !!val;
       else el.value = val == null ? '' : val;
     });
+    if (state.fields.m_esconder_nao_preparadas && state.fields.m_esconder_nao_preparadas_oficiais == null && state.fields.m_esconder_nao_preparadas_personalizadas == null) {
+      const official = document.querySelector('[name="m_esconder_nao_preparadas_oficiais"]');
+      const custom = document.querySelector('[name="m_esconder_nao_preparadas_personalizadas"]');
+      if (official) official.checked = true;
+      if (custom) custom.checked = true;
+    }
   }
   attacks = Array.isArray(state.attacks) ? state.attacks : [];
   habilidades = Array.isArray(state.habilidades) ? state.habilidades : [];

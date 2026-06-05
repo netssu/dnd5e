@@ -644,11 +644,28 @@
     text-align: left;
     font-size: 16px;
   }
+  .spell-filter-options {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+  .spell-filter-title {
+    color: var(--text-mute);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+  .spell-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
   .spell-filter-toggle {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 8px;
     color: var(--text-dim);
     font-size: 11px;
     text-transform: uppercase;
@@ -746,6 +763,18 @@
     text-align: center;
     padding: 4px 6px;
     font-size: 13px;
+  }
+  .slot-auto-chip {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(54, 181, 106, 0.35);
+    border-radius: 999px;
+    padding: 3px 7px;
+    color: #99e8b6;
+    background: rgba(54, 181, 106, 0.06);
+    font-size: 9px;
+    line-height: 1;
+    letter-spacing: 0.7px;
   }
 
   .spell-cards {
@@ -928,6 +957,15 @@
     font-size: 12px;
     line-height: 1.5;
     background: var(--bg-1);
+  }
+  .spell-description.custom-description textarea {
+    border: none;
+    border-radius: 0;
+    min-height: 92px;
+    resize: vertical;
+  }
+  .spell-description.custom-description textarea:focus {
+    box-shadow: none;
   }
   .spell-description {
     background: var(--bg-1);
@@ -1569,10 +1607,19 @@
     <div class="combat-stat" style="text-align: left; padding: 12px 16px;">
       <div class="lbl">Filtrar Magias</div>
       <input type="text" name="m_filtro_magias" id="spell-search" placeholder="Nome, escola ou texto" style="text-align: left; font-size: 14px;">
-      <label class="spell-filter-toggle">
-        <input type="checkbox" name="m_esconder_nao_preparadas" id="spell-hide-unprepared">
-        Esconder não preparadas
-      </label>
+      <div class="spell-filter-options">
+        <div class="spell-filter-title">Esconder não preparadas</div>
+        <div class="spell-filter-row">
+          <label class="spell-filter-toggle">
+            <input type="checkbox" name="m_esconder_nao_preparadas_oficiais" id="spell-hide-unprepared-official" data-hide-unprepared-kind="official">
+            Oficiais
+          </label>
+          <label class="spell-filter-toggle">
+            <input type="checkbox" name="m_esconder_nao_preparadas_personalizadas" id="spell-hide-unprepared-custom" data-hide-unprepared-kind="custom">
+            Personalizadas
+          </label>
+        </div>
+      </div>
     </div>
     <div class="combat-stat">
       <div class="lbl">Atributo de Conjuração</div>
