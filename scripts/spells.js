@@ -1,9 +1,26 @@
 // ========== Spells ==========
 const OFFICIAL_SPELLS = Array.isArray(window.SPELL_COMPENDIUM) ? window.SPELL_COMPENDIUM : [];
 const SPELL_CLASS_LABELS_LOCAL = window.SPELL_CLASS_LABELS || {};
-const SPELL_CLASS_ORDER = ['bardo', 'bruxo', 'clerigo', 'druida', 'feiticeiro', 'mago', 'paladino', 'ranger'];
+const SPELL_CLASS_ORDER = ['barbaro', 'bardo', 'bruxo', 'clerigo', 'druida', 'feiticeiro', 'guerreiro', 'ladino', 'mago', 'monge', 'paladino', 'ranger'];
 const FULL_CASTER_CLASSES = new Set(['bardo', 'clerigo', 'druida', 'feiticeiro', 'mago']);
+const NON_CASTER_CLASSES = new Set(['barbaro', 'guerreiro', 'ladino', 'monge']);
+const CLASS_DISPLAY_LABELS = {
+  barbaro: 'Bárbaro',
+  bardo: 'Bardo',
+  bruxo: 'Bruxo',
+  clerigo: 'Clérigo',
+  druida: 'Druida',
+  feiticeiro: 'Feiticeiro',
+  guerreiro: 'Guerreiro',
+  ladino: 'Ladino',
+  mago: 'Mago',
+  monge: 'Monge',
+  paladino: 'Paladino',
+  ranger: 'Patrulheiro',
+};
 const SPELL_CLASS_ALIASES = {
+  barbaro: 'barbaro',
+  barbarian: 'barbaro',
   bardo: 'bardo',
   bard: 'bardo',
   bruxo: 'bruxo',
@@ -14,8 +31,14 @@ const SPELL_CLASS_ALIASES = {
   druid: 'druida',
   feiticeiro: 'feiticeiro',
   sorcerer: 'feiticeiro',
+  guerreiro: 'guerreiro',
+  fighter: 'guerreiro',
+  ladino: 'ladino',
+  rogue: 'ladino',
   mago: 'mago',
   wizard: 'mago',
+  monge: 'monge',
+  monk: 'monge',
   paladino: 'paladino',
   paladin: 'paladino',
   ranger: 'ranger',
@@ -41,7 +64,7 @@ function initSpellControls() {
   if (select) {
     select.innerHTML = [
       '<option value="custom">Classe customizada</option>',
-      ...SPELL_CLASS_ORDER.map(cls => `<option value="${cls}">${escapeHtml(SPELL_CLASS_LABELS_LOCAL[cls] || cls)}</option>`)
+      ...SPELL_CLASS_ORDER.map(cls => `<option value="${cls}">${escapeHtml(CLASS_DISPLAY_LABELS[cls] || SPELL_CLASS_LABELS_LOCAL[cls] || cls)}</option>`)
     ].join('');
     select.value = 'custom';
     select.addEventListener('change', () => {
@@ -158,6 +181,10 @@ function getClassLevel() {
 
 function allowedSpellLevelsForClass(cls, classLevel) {
   const allowed = new Set();
+  // Classes não-conjuradoras: nenhum círculo de magia disponível
+  if (NON_CASTER_CLASSES.has(cls)) {
+    return allowed;
+  }
   if (!isOfficialSpellClass(cls)) {
     SPELL_LEVELS.forEach(l => allowed.add(l.lvl));
     return allowed;
