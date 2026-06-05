@@ -1,6 +1,6 @@
 // ========== Save / Load ==========
 function collectState() {
-  const state = { fields: {}, attacks: attacks, habilidades: habilidades, habCanvasHeight: habCanvasHeight, spells: spells };
+  const state = { fields: {}, attacks: attacks, habilidades: habilidades, habCanvasHeight: habCanvasHeight, classFeatureUsage: classFeatureUsage, spells: spells };
   document.querySelectorAll('input[name], textarea[name], select[name]').forEach(el => {
     if (el.type === 'checkbox') state.fields[el.name] = el.checked;
     else state.fields[el.name] = el.value;
@@ -24,6 +24,7 @@ function applyState(state) {
   attacks = Array.isArray(state.attacks) ? state.attacks : [];
   habilidades = Array.isArray(state.habilidades) ? state.habilidades : [];
   habCanvasHeight = (typeof state.habCanvasHeight === 'number' && state.habCanvasHeight > 0) ? state.habCanvasHeight : 320;
+  classFeatureUsage = (state.classFeatureUsage && typeof state.classFeatureUsage === 'object' && !Array.isArray(state.classFeatureUsage)) ? state.classFeatureUsage : {};
   applyCanvasHeight();
   spells = (state.spells && typeof state.spells === 'object') ? state.spells : {};
   applyCharacterClassState(state.fields || {});

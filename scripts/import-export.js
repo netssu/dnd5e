@@ -38,6 +38,7 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   attacks = [];
   habilidades = [];
   habCanvasHeight = 320;
+  classFeatureUsage = {};
   spells = {};
   SPELL_LEVELS.forEach(l => spells[l.lvl] = []);
   ensureSpellState();
@@ -54,6 +55,7 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   syncSpellClassMirror();
   renderAttacks();
   renderHabilidades();
+  if (typeof renderClassFeatures === 'function') renderClassFeatures();
   renderSpellLevels();
   document.querySelectorAll('.attr-box input.val').forEach(inp => inp.dispatchEvent(new Event('input')));
   toast('Ficha limpa');

@@ -262,6 +262,102 @@ function getClassFeaturesUpToLevel(rawClass, level) {
   return all.filter(f => f.level <= lvl);
 }
 
+const CLASS_FEATURE_KIND = {
+  active: { label: 'Ação', mark: 'active' },
+  bonus: { label: 'Bônus', mark: 'bonus' },
+  reaction: { label: 'Reação', mark: 'reaction' },
+  resource: { label: 'Recurso', mark: 'resource' },
+  choice: { label: 'Escolha', mark: 'choice' },
+  passive: { label: 'Passiva', mark: '' },
+};
+
+function normalizeClassFeatureText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function getClassFeatureId(classKey, feature) {
+  const title = normalizeClassFeatureText(feature.titulo)
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `${classKey}:${feature.level}:${title}`;
+}
+
+function barbarianRageUses(level) {
+  if (level >= 20) return '∞';
+  if (level >= 17) return '6';
+  if (level >= 12) return '5';
+  if (level >= 6) return '4';
+  if (level >= 3) return '3';
+  return '2';
+}
+
+function classFeatureSuggestedTotal(classKey, feature, currentLevel) {
+  const title = normalizeClassFeatureText(feature.titulo);
+  if (classKey === 'barbaro' && title === 'furia') return barbarianRageUses(currentLevel);
+  if (classKey === 'bardo' && title.includes('inspiracao de bardo')) return 'Car';
+  if (classKey === 'clerigo' && title.includes('canalizar divindade')) return currentLevel >= 18 ? '3' : currentLevel >= 6 ? '2' : '1';
+  if (classKey === 'druida' && title.includes('forma selvagem')) return currentLevel >= 20 ? '∞' : '2';
+  if (classKey === 'feiticeiro' && title.includes('fonte de magia')) return String(currentLevel);
+  if (classKey === 'guerreiro' && title.includes('retomar o folego')) return '1';
+  if (classKey === 'guerreiro' && title.includes('surto de acao')) return currentLevel >= 17 ? '2' : '1';
+  if (classKey === 'guerreiro' && title.includes('indomavel')) return currentLevel >= 17 ? '3' : currentLevel >= 13 ? '2' : '1';
+  if (classKey === 'ladino' && title.includes('golpe de sorte')) return '1';
+  if (classKey === 'mago' && title.includes('recuperacao arcana')) return '1';
+  if (classKey === 'mago' && title.includes('assinatura magica')) return '2';
+  if (classKey === 'monge' && title === 'chi') return String(currentLevel);
+  if (classKey === 'paladino' && title.includes('canalizar divindade')) return '1';
+  if (classKey === 'paladino' && title.includes('sentido divino')) return 'Car + 1';
+  if (classKey === 'paladino' && title.includes('cura pelas maos')) return String(currentLevel * 5);
+  if (classKey === 'paladino' && title.includes('toque purificador')) return 'Car';
+  if (classKey === 'bruxo' && (title.includes('arcana mistica') || title.includes('mestre mistico'))) return '1';
+  return '';
+}
+
+function getClassFeatureMeta(classKey, feature, currentLevel) {
+  const text = normalizeClassFeatureText(`${feature.titulo} ${feature.descricao}`);
+  const suggestedTotal = classFeatureSuggestedTotal(classKey, feature, currentLevel);
+  let kind = 'passive';
+  if (suggestedTotal) kind = 'resource';
+  else if (text.includes('reacao')) kind = 'reaction';
+  else if (text.includes('acao bonus')) kind = 'bonus';
+  else if (text.includes('acao') || text.includes('ao acertar') || text.includes('pode usar') || text.includes('pode atacar')) kind = 'active';
+  else if (text.includes('escolha') || text.includes('adote') || text.includes('proficiencias')) kind = 'choice';
+  const meta = CLASS_FEATURE_KIND[kind] || CLASS_FEATURE_KIND.passive;
+  return { kind, label: meta.label, mark: meta.mark, suggestedTotal };
+}
+
+function renderClassFeatureTracker(featureId, suggestedTotal) {
+  const usage = (classFeatureUsage && classFeatureUsage[featureId]) || {};
+  return `
+    <span class="cf-tracker">
+      <span>Total</span>
+      <input type="text" data-cf-total="${escapeHtml(featureId)}" value="${escapeHtml(usage.total || '')}" placeholder="${escapeHtml(suggestedTotal)}" aria-label="Total disponível">
+      <span>Gasto</span>
+      <input type="text" data-cf-used="${escapeHtml(featureId)}" value="${escapeHtml(usage.used || '')}" placeholder="0" aria-label="Quantidade gasta">
+    </span>
+  `;
+}
+
+function wireClassFeatureTrackers(container) {
+  container.querySelectorAll('.cf-tracker, .cf-tracker input').forEach(el => {
+    el.addEventListener('click', e => e.stopPropagation());
+  });
+  container.querySelectorAll('.cf-tracker input').forEach(input => {
+    input.addEventListener('input', e => {
+      const id = e.target.dataset.cfTotal || e.target.dataset.cfUsed;
+      if (!id) return;
+      if (!classFeatureUsage || typeof classFeatureUsage !== 'object' || Array.isArray(classFeatureUsage)) classFeatureUsage = {};
+      if (!classFeatureUsage[id]) classFeatureUsage[id] = { total: '', used: '' };
+      if (e.target.dataset.cfTotal) classFeatureUsage[id].total = e.target.value;
+      if (e.target.dataset.cfUsed) classFeatureUsage[id].used = e.target.value;
+      save();
+    });
+  });
+}
+
 // Renderiza a seção dedicada de Habilidades de Classe (read-only, fora do canvas livre)
 function renderClassFeatures() {
   const container = document.getElementById('class-features-list');
@@ -279,7 +375,8 @@ function renderClassFeatures() {
     return;
   }
   const features = getClassFeaturesUpToLevel(rawClass, level);
-  if (titleEl) titleEl.textContent = `Habilidades de ${CLASS_LABELS[key] || key} (Nível ${Math.max(1, Math.min(20, parseInt(level, 10) || 1))})`;
+  const currentLevel = Math.max(1, Math.min(20, parseInt(level, 10) || 1));
+  if (titleEl) titleEl.textContent = `Habilidades de ${CLASS_LABELS[key] || key} (Nível ${currentLevel})`;
   if (!features.length) {
     container.innerHTML = '<div class="cf-empty">Nenhuma habilidade fixa neste nível.</div>';
     return;
@@ -289,14 +386,21 @@ function renderClassFeatures() {
   features.forEach(f => { (byLevel[f.level] = byLevel[f.level] || []).push(f); });
   const levels = Object.keys(byLevel).map(n => parseInt(n)).sort((a, b) => a - b);
   const html = levels.map(lv => {
-    const items = byLevel[lv].map(f => `
-      <details class="cf-item">
+    const items = byLevel[lv].map(f => {
+      const meta = getClassFeatureMeta(key, f, currentLevel);
+      const featureId = getClassFeatureId(key, f);
+      return `
+      <details class="cf-item cf-${meta.kind}">
         <summary>
+          <span class="cf-mark ${meta.mark}" aria-hidden="true"></span>
           <span class="cf-name">${escapeHtml(f.titulo)}</span>
+          <span class="cf-type-label">${escapeHtml(meta.label)}</span>
+          ${meta.suggestedTotal ? renderClassFeatureTracker(featureId, meta.suggestedTotal) : ''}
         </summary>
         <div class="cf-desc">${escapeHtml(f.descricao)}</div>
       </details>
-    `).join('');
+    `;
+    }).join('');
     return `
       <div class="cf-level-group">
         <div class="cf-level-badge">Nv ${lv}</div>
@@ -304,7 +408,17 @@ function renderClassFeatures() {
       </div>
     `;
   }).join('');
-  container.innerHTML = html;
+  container.innerHTML = `
+    <div class="cf-legend">
+      <span class="cf-legend-item"><span class="cf-mark active" aria-hidden="true"></span>Ação</span>
+      <span class="cf-legend-item"><span class="cf-mark bonus" aria-hidden="true"></span>Bônus</span>
+      <span class="cf-legend-item"><span class="cf-mark reaction" aria-hidden="true"></span>Reação</span>
+      <span class="cf-legend-item"><span class="cf-mark resource" aria-hidden="true"></span>Recurso</span>
+      <span class="cf-legend-item"><span class="cf-mark choice" aria-hidden="true"></span>Escolha</span>
+    </div>
+    ${html}
+  `;
+  wireClassFeatureTrackers(container);
 }
 
 function wireClassFeaturesSync() {

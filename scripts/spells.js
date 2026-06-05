@@ -89,6 +89,8 @@ function initSpellControls() {
   });
   const search = document.getElementById('spell-search');
   if (search) search.addEventListener('input', () => { renderSpellLevels(); save(); });
+  const hideUnprepared = document.getElementById('spell-hide-unprepared');
+  if (hideUnprepared) hideUnprepared.addEventListener('change', () => { renderSpellLevels(); save(); });
   syncSpellClassMirror();
 }
 
@@ -217,6 +219,11 @@ function getSpellSearch() {
   return normalizeText(input ? input.value : '');
 }
 
+function shouldHideUnprepared() {
+  const input = document.getElementById('spell-hide-unprepared');
+  return !!(input && input.checked);
+}
+
 function spellMatchesQuery(sp, query) {
   if (!query) return true;
   return normalizeText([
@@ -306,7 +313,7 @@ function renderSpellLevels() {
   container.querySelectorAll('[data-add-spell]').forEach(btn => {
     btn.addEventListener('click', e => {
       const lvl = parseInt(e.target.dataset.addSpell);
-      spells[lvl].push(newSpell());
+      spells[lvl].push(newSpell(shouldHideUnprepared()));
       renderSpellLevels();
       save();
       const inputs = document.querySelectorAll(`[data-sp-l="${lvl}"][data-sp-k="nome"]`);
@@ -335,11 +342,11 @@ function renderSpellLevels() {
   renderSpellSummary();
 }
 
-function newSpell() {
+function newSpell(preparada = false) {
   return {
     nome: '', escola: '', tempo: '', alcance: '',
     componentes: '', duracao: '', material: '',
-    descricao: '', preparada: false
+    descricao: '', preparada
   };
 }
 
@@ -373,7 +380,8 @@ function renderSpellCards(lvl) {
   const customCards = spells[lvl]
     .map((sp, i) => customSpellCard(sp, i, lvl))
     .filter(card => customSpellMatchesQuery(card.spell, query));
-  const cards = officialCards.concat(customCards).sort((a, b) => {
+  const hideUnprepared = shouldHideUnprepared();
+  const cards = officialCards.concat(customCards).filter(card => !hideUnprepared || card.prepared).sort((a, b) => {
     if (a.prepared !== b.prepared) return a.prepared ? -1 : 1;
     if (a.type !== b.type) return a.type === 'official' ? -1 : 1;
     return a.name.localeCompare(b.name, 'pt-BR');
@@ -381,7 +389,7 @@ function renderSpellCards(lvl) {
   if (!cards.length) {
     const empty = document.createElement('div');
     empty.className = 'spell-empty';
-    empty.textContent = 'Nenhuma magia neste círculo.';
+    empty.textContent = hideUnprepared ? 'Nenhuma magia preparada neste círculo.' : 'Nenhuma magia neste círculo.';
     wrap.appendChild(empty);
     return;
   }
@@ -502,6 +510,7 @@ function renderSpellSummary() {
   const visibleOfficial = official ? OFFICIAL_SPELLS.filter(sp => allowed.has(sp.nivel) && sp.classes.includes(cls)) : [];
   const preparedOfficial = visibleOfficial.filter(sp => isOfficialPrepared(sp.id)).length;
   const preparedCustom = SPELL_LEVELS.reduce((acc, lv) => acc + (spells[lv.lvl] || []).filter(sp => sp.preparada).length, 0);
+  const hideUnprepared = shouldHideUnprepared();
   const maxLevel = allowed.size ? Math.max(...Array.from(allowed)) : 0;
   const classLabel = getCharacterClassLabel();
   const maxText = official
@@ -513,6 +522,7 @@ function renderSpellSummary() {
     <span class="spell-chip">${escapeHtml(maxText)}</span>
     <span class="spell-chip">Oficiais <strong>${visibleOfficial.length}</strong></span>
     <span class="spell-chip">Preparadas <strong>${preparedOfficial + preparedCustom}</strong></span>
+    ${hideUnprepared ? '<span class="spell-chip muted">Ocultando não preparadas</span>' : ''}
     ${official ? '' : '<span class="spell-chip muted">Personalizada</span>'}
   `;
 }

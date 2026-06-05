@@ -25,5 +25,6 @@ const ICONS = {
 let attacks = [];
 let habilidades = [];
 let habCanvasHeight = 320;
+let classFeatureUsage = {};
 let spells = {}; // { 0: [...], 1: [...], ... }
 SPELL_LEVELS.forEach(l => spells[l.lvl] = []);
