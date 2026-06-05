@@ -143,8 +143,8 @@
   }
 
   /* Form elements */
-  label.field { display: block; margin-bottom: 10px; }
-  label.field > .lbl {
+  .field { display: block; margin-bottom: 10px; }
+  .field > .lbl {
     font-size: 10px;
     letter-spacing: 1.2px;
     color: var(--text-mute);
@@ -354,6 +354,17 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 14px;
+  }
+  .class-level-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 76px;
+    gap: 8px;
+  }
+  .class-level-controls input {
+    text-align: center;
+  }
+  .custom-class-name {
+    margin-top: 8px;
   }
 
   .main-grid {
@@ -612,8 +623,26 @@
     align-items: stretch;
   }
   .spell-header .combat-stat select,
-  .spell-header .combat-stat input {
+  .spell-header .combat-stat input,
+  .spell-mirror-value {
     min-height: 38px;
+  }
+  .spell-mirror-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    font-family: 'Georgia', serif;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 4px 0;
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+  }
+  .spell-mirror-value.left {
+    justify-content: flex-start;
+    text-align: left;
+    font-size: 16px;
   }
   .spell-summary {
     display: flex;
@@ -714,7 +743,7 @@
     border-radius: 10px;
     padding: 12px;
     position: relative;
-    transition: all 0.15s;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, opacity 0.15s, filter 0.15s, transform 0.15s;
   }
   .spell-card.official {
     display: flex;
@@ -727,8 +756,36 @@
   .spell-card.custom-spell {
     border-style: dashed;
   }
-  .spell-card:hover { border-color: var(--gold-soft); box-shadow: 0 0 14px rgba(212, 175, 55, 0.12); }
-  .spell-card.prepared { border-color: var(--gold); }
+  .spell-card:not(.prepared) {
+    background: linear-gradient(180deg, #16140f, #0f0e0c);
+    border-color: #2b271d;
+    opacity: 0.72;
+    filter: saturate(0.72);
+  }
+  .spell-card:not(.prepared) .spell-name-display,
+  .spell-card:not(.prepared) .name-input {
+    color: #a9944d;
+  }
+  .spell-card:hover {
+    border-color: var(--gold-soft);
+    box-shadow: 0 0 14px rgba(212, 175, 55, 0.12);
+  }
+  .spell-card:not(.prepared):hover {
+    background: linear-gradient(180deg, #211d14, #15120d);
+    opacity: 1;
+    filter: none;
+    transform: translateY(-2px);
+    box-shadow: 0 0 18px rgba(212, 175, 55, 0.18);
+  }
+  .spell-card:not(.prepared):hover .prepare-btn:not(.active) {
+    border-color: var(--gold-soft);
+    color: var(--gold);
+  }
+  .spell-card.prepared {
+    border-color: var(--gold);
+    opacity: 1;
+    filter: none;
+  }
   .spell-card.prepared::before {
     content: '';
     position: absolute;
@@ -969,6 +1026,142 @@
   ::-webkit-scrollbar-track { background: var(--bg-0); }
   ::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 5px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+  /* ========== Auto-filled fields ========== */
+  input.auto-filled, textarea.auto-filled {
+    background: linear-gradient(180deg, rgba(212,175,55,0.06), rgba(212,175,55,0.02));
+    border-color: rgba(212,175,55,0.35);
+    color: var(--gold);
+    font-style: italic;
+  }
+  input.auto-filled:focus, textarea.auto-filled:focus {
+    font-style: normal;
+  }
+  .auto-hint {
+    font-size: 10px;
+    color: var(--text-mute);
+    margin-top: 4px;
+    font-style: italic;
+    letter-spacing: 0.3px;
+  }
+
+  /* ========== Class Features Section ========== */
+  .class-features-card {
+    margin-top: 16px;
+    background: linear-gradient(180deg, var(--bg-1), #14130f);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold-soft);
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .class-features-card .cf-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .class-features-card .cf-title {
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .class-features-card .cf-hint {
+    font-size: 10px;
+    color: var(--text-mute);
+    font-style: italic;
+  }
+  .cf-level-group {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .cf-level-group:last-child { border-bottom: none; }
+  .cf-level-badge {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+    color: var(--bg-0);
+    border-radius: 8px;
+    font-weight: 700;
+    font-family: 'Georgia', serif;
+    font-size: 13px;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px var(--gold-glow);
+  }
+  .cf-level-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cf-item {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .cf-item:hover { border-color: var(--gold-soft); }
+  .cf-item summary {
+    cursor: pointer;
+    padding: 8px 12px;
+    font-family: 'Georgia', serif;
+    color: var(--gold);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    position: relative;
+  }
+  .cf-item summary::-webkit-details-marker { display: none; }
+  .cf-item summary::before {
+    content: '▸';
+    color: var(--text-mute);
+    transition: transform 0.15s;
+    font-size: 10px;
+    width: 10px;
+    flex-shrink: 0;
+  }
+  .cf-item[open] summary::before { transform: rotate(90deg); color: var(--gold); }
+  .cf-item .cf-name { flex: 1; }
+  .cf-item .cf-desc {
+    padding: 8px 12px 12px 30px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text);
+    border-top: 1px dashed var(--border);
+    background: var(--bg-1);
+  }
+  .cf-empty {
+    padding: 14px;
+    color: var(--text-mute);
+    font-size: 12px;
+    text-align: center;
+    font-style: italic;
+    background: var(--bg-2);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+  }
+
+  /* Notes section title for free canvas */
+  .canvas-section-note {
+    font-size: 11px;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  .canvas-section-note strong { color: var(--gold-soft); }
 </style>
 </head>
 <body>
@@ -999,7 +1192,14 @@
       <input type="text" name="nome_personagem" placeholder="Nome do Personagem">
     </div>
     <div class="grid6">
-      <label class="field"><span class="lbl">Classe e Nível</span><input type="text" name="classe_nivel"></label>
+      <div class="field">
+        <span class="lbl">Classe e Nível</span>
+        <div class="class-level-controls">
+          <select name="classe_personagem" id="character-class" aria-label="Classe do personagem"></select>
+          <input type="number" name="nivel_classe" id="character-class-level" min="1" max="20" value="1" aria-label="Nível da classe">
+        </div>
+        <input type="text" name="classe_custom_nome" id="character-custom-class" class="custom-class-name" placeholder="Nome da classe customizada" aria-label="Nome da classe customizada">
+      </div>
       <label class="field"><span class="lbl">Antecedente</span><input type="text" name="antecedente"></label>
       <label class="field"><span class="lbl">Nome do Jogador</span><input type="text" name="nome_jogador"></label>
       <label class="field"><span class="lbl">Raça</span><input type="text" name="raca"></label>
@@ -1048,7 +1248,7 @@
     <div>
       <div class="insp-prof">
         <div class="mini">
-          <div class="lbl">Inspiração</div>
+          <div class="lbl" title="Marque quando o Mestre conceder inspiração">Inspiração</div>
           <input type="number" name="inspiracao">
         </div>
         <div class="mini">
@@ -1178,9 +1378,19 @@
     </div>
   </div>
 
+  <div class="class-features-card">
+    <div class="cf-header">
+      <div class="cf-title" id="class-features-title">Habilidades de Classe</div>
+      <div class="cf-hint">Preenchidas automaticamente pela classe e nível. Clique para expandir.</div>
+    </div>
+    <div id="class-features-list"></div>
+  </div>
+
   <div class="card" style="margin-top: 16px;">
-    <div class="card-title">Habilidades &amp; Características de Classe</div>
-    <div style="font-size: 11px; color: var(--text-mute); margin-bottom: 8px;">Arraste pelo ícone <span style="color: var(--gold);">⋮⋮</span> para mover. Use o canto inferior direito <span style="color: var(--gold-soft);">◢</span> para redimensionar.</div>
+    <div class="card-title">Anotações livres &amp; Subclasse</div>
+    <div class="canvas-section-note">
+      Espaço para suas <strong>escolhas de subclasse</strong> (caminhos, domínios, colégios, juramentos, escolas, patronos, círculos, tradições, arquétipos, origens, conclaves) e outras habilidades. Arraste pelo ícone <span style="color: var(--gold);">⋮⋮</span> para mover. Use o canto inferior direito <span style="color: var(--gold-soft);">◢</span> para redimensionar.
+    </div>
     <div class="habilidades-canvas" id="habilidades-canvas"></div>
     <button class="add-hab-btn" id="add-habilidade">+ Adicionar Habilidade</button>
   </div>
@@ -1244,11 +1454,11 @@
   <div class="spell-header">
     <div class="combat-stat" style="text-align: left; padding: 12px 16px;">
       <div class="lbl">Classe Conjuradora</div>
-      <select name="m_classe" id="spell-class" style="text-align: left; font-size: 16px;"></select>
+      <div class="spell-mirror-value left" id="spell-class-display">Classe customizada</div>
     </div>
     <div class="combat-stat">
       <div class="lbl">Nível da Classe</div>
-      <input type="number" name="m_nivel_classe" id="spell-class-level" min="1" max="20" value="1">
+      <div class="spell-mirror-value" id="spell-level-display">1</div>
     </div>
     <div class="combat-stat" style="text-align: left; padding: 12px 16px;">
       <div class="lbl">Filtrar Magias</div>
@@ -1281,946 +1491,16 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="spells-data.js"></script>
-<script>
-const STORAGE_KEY = 'dnd5e_ficha_v1';
-
-const SPELL_LEVELS = [
-  { lvl: 0, name: 'Truques', sub: 'Cantrips — sempre conhecidos' },
-  { lvl: 1, name: 'Magias de 1º Círculo' },
-  { lvl: 2, name: 'Magias de 2º Círculo' },
-  { lvl: 3, name: 'Magias de 3º Círculo' },
-  { lvl: 4, name: 'Magias de 4º Círculo' },
-  { lvl: 5, name: 'Magias de 5º Círculo' },
-  { lvl: 6, name: 'Magias de 6º Círculo' },
-  { lvl: 7, name: 'Magias de 7º Círculo' },
-  { lvl: 8, name: 'Magias de 8º Círculo' },
-  { lvl: 9, name: 'Magias de 9º Círculo' },
-];
-
-// ========== Icons (inline SVG) ==========
-const ICONS = {
-  time: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
-  range: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>',
-  comp: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 6.6L21 9l-5 4.6 1.4 7L12 16.8 6.6 20.6 8 13.6 3 9l6.6-0.4z"/></svg>',
-  duration: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h14M5 21h14M7 3l5 9 5-9M7 21l5-9 5 9"/></svg>',
-};
-
-// ========== State (dynamic lists) ==========
-let attacks = [];
-let habilidades = [];
-let habCanvasHeight = 320;
-let spells = {}; // { 0: [...], 1: [...], ... }
-SPELL_LEVELS.forEach(l => spells[l.lvl] = []);
-
-// ========== Tabs ==========
-document.querySelectorAll('nav.tabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
-
-// ========== Attribute modifier calculation ==========
-function calcMod(val) {
-  if (val === '' || val === null || isNaN(val)) return 0;
-  return Math.floor((parseInt(val) - 10) / 2);
-}
-function fmtMod(m) { return (m >= 0 ? '+' : '') + m; }
-
-document.querySelectorAll('.attr-box').forEach(box => {
-  const input = box.querySelector('input.val');
-  const modEl = box.querySelector('[data-mod]');
-  const update = () => { modEl.textContent = fmtMod(calcMod(input.value)); };
-  input.addEventListener('input', () => { update(); save(); });
-  update();
-});
-
-
-// ========== Auto-fill skills & saves ==========
-const SKILL_ATTR_MAP = {
-  sv_forca: 'attr_forca',
-  sv_destreza: 'attr_destreza',
-  sv_constituicao: 'attr_constituicao',
-  sv_inteligencia: 'attr_inteligencia',
-  sv_sabedoria: 'attr_sabedoria',
-  sv_carisma: 'attr_carisma',
-  sk_acrobacia: 'attr_destreza',
-  sk_arcanismo: 'attr_inteligencia',
-  sk_atletismo: 'attr_forca',
-  sk_atuacao: 'attr_carisma',
-  sk_enganacao: 'attr_carisma',
-  sk_furtividade: 'attr_destreza',
-  sk_historia: 'attr_inteligencia',
-  sk_intimidacao: 'attr_carisma',
-  sk_intuicao: 'attr_sabedoria',
-  sk_investigacao: 'attr_inteligencia',
-  sk_animais: 'attr_sabedoria',
-  sk_medicina: 'attr_sabedoria',
-  sk_natureza: 'attr_inteligencia',
-  sk_percepcao: 'attr_sabedoria',
-  sk_persuasao: 'attr_carisma',
-  sk_prestidigitacao: 'attr_destreza',
-  sk_religiao: 'attr_inteligencia',
-  sk_sobrevivencia: 'attr_sabedoria',
-};
-
-function getProfBonus() {
-  const inp = document.querySelector('[name="prof_bonus"]');
-  const v = inp ? parseInt(inp.value) : 0;
-  return isNaN(v) ? 0 : v;
-}
-
-function recalcDerived() {
-  const profBonus = getProfBonus();
-  Object.entries(SKILL_ATTR_MAP).forEach(([base, attrName]) => {
-    const attrInp = document.querySelector('[name="' + attrName + '"]');
-    const profInp = document.querySelector('[name="' + base + '_p"]');
-    const valInp = document.querySelector('[name="' + base + '_v"]');
-    if (!attrInp || !profInp || !valInp) return;
-    if (attrInp.value === '' || attrInp.value === null) return; // don't write if no attribute set
-    const mod = calcMod(attrInp.value);
-    const total = mod + (profInp.checked ? profBonus : 0);
-    valInp.value = total;
-  });
-}
-
-// Wire triggers
-document.querySelectorAll('.attr-box input.val').forEach(inp => {
-  inp.addEventListener('input', () => { recalcDerived(); save(); });
-});
-Object.keys(SKILL_ATTR_MAP).forEach(base => {
-  const cb = document.querySelector('[name="' + base + '_p"]');
-  if (cb) cb.addEventListener('change', () => { recalcDerived(); save(); });
-});
-const _profInp = document.querySelector('[name="prof_bonus"]');
-if (_profInp) _profInp.addEventListener('input', () => { recalcDerived(); save(); });
-
-// ========== Attacks ==========
-function renderAttacks() {
-  const tbody = document.getElementById('attacks-body');
-  tbody.innerHTML = '';
-  attacks.forEach((a, i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="text" data-atk-i="${i}" data-atk-k="nome" value="${escapeHtml(a.nome||'')}"></td>
-      <td><input type="text" data-atk-i="${i}" data-atk-k="bonus" value="${escapeHtml(a.bonus||'')}"></td>
-      <td><input type="text" data-atk-i="${i}" data-atk-k="dano" value="${escapeHtml(a.dano||'')}"></td>
-      <td class="act"><button class="icon-btn del" data-del-atk="${i}" title="Remover">✕</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  tbody.querySelectorAll('input').forEach(inp => {
-    inp.addEventListener('input', e => {
-      const i = parseInt(e.target.dataset.atkI);
-      const k = e.target.dataset.atkK;
-      attacks[i][k] = e.target.value;
-      save();
-    });
-  });
-  tbody.querySelectorAll('[data-del-atk]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      attacks.splice(parseInt(e.target.dataset.delAtk), 1);
-      renderAttacks();
-      save();
-    });
-  });
-}
-document.getElementById('add-attack').addEventListener('click', () => {
-  attacks.push({ nome: '', bonus: '', dano: '' });
-  renderAttacks();
-  save();
-});
-
-// ========== Habilidades (free-form canvas) ==========
-const HAB_DEFAULT_W = 290, HAB_DEFAULT_H = 200, HAB_GAP = 14;
-
-function autoPlace(idx, canvasWidth) {
-  const cols = Math.max(1, Math.floor((canvasWidth - HAB_GAP) / (HAB_DEFAULT_W + HAB_GAP)));
-  return {
-    x: HAB_GAP + (idx % cols) * (HAB_DEFAULT_W + HAB_GAP),
-    y: HAB_GAP + Math.floor(idx / cols) * (HAB_DEFAULT_H + HAB_GAP)
-  };
-}
-
-function resizeCanvas() {
-  const canvas = document.getElementById('habilidades-canvas');
-  if (!canvas) return;
-  let maxBottom = 220;
-  habilidades.forEach(h => {
-    const y = (typeof h.y === 'number') ? h.y : 0;
-    const ht = (typeof h.h === 'number') ? h.h : HAB_DEFAULT_H;
-    if (y + ht + HAB_GAP > maxBottom) maxBottom = y + ht + HAB_GAP;
-  });
-  // Always keep enough scrollable space for cards, but don't shrink the user's manual height
-  canvas.style.minHeight = maxBottom + 'px';
-}
-
-// Apply saved canvas height (set by user dragging the resize handle)
-function applyCanvasHeight() {
-  const canvas = document.getElementById('habilidades-canvas');
-  if (!canvas) return;
-  if (typeof habCanvasHeight === 'number' && habCanvasHeight > 0) {
-    canvas.style.height = habCanvasHeight + 'px';
-  }
-}
-
-// Watch for user resize via the native resize handle and persist
-let _canvasResizeObserver = null;
-function watchCanvasResize() {
-  const canvas = document.getElementById('habilidades-canvas');
-  if (!canvas || _canvasResizeObserver) return;
-  if (typeof ResizeObserver === 'undefined') return;
-  let lastH = canvas.offsetHeight;
-  _canvasResizeObserver = new ResizeObserver(entries => {
-    for (const entry of entries) {
-      const nh = Math.round(entry.contentRect.height);
-      if (Math.abs(nh - lastH) > 2) {
-        lastH = nh;
-        habCanvasHeight = nh;
-        save();
-      }
-    }
-  });
-  _canvasResizeObserver.observe(canvas);
-}
-
-function renderHabilidades() {
-  const canvas = document.getElementById('habilidades-canvas');
-  if (!canvas) return;
-  canvas.innerHTML = '';
-  const cw = canvas.clientWidth || 800;
-  habilidades.forEach((h, i) => {
-    let x = (typeof h.x === 'number') ? h.x : null;
-    let y = (typeof h.y === 'number') ? h.y : null;
-    if (x === null || y === null) {
-      const p = autoPlace(i, cw);
-      x = p.x; y = p.y;
-    }
-    const w = (typeof h.w === 'number') ? h.w : HAB_DEFAULT_W;
-    const ht = (typeof h.h === 'number') ? h.h : HAB_DEFAULT_H;
-    const card = document.createElement('div');
-    card.className = 'habilidade-card';
-    card.style.left = x + 'px';
-    card.style.top = y + 'px';
-    card.style.width = w + 'px';
-    card.style.height = ht + 'px';
-    card.dataset.habIdx = i;
-    card.innerHTML = `
-      <div class="top-row">
-        <span class="drag-handle" title="Arrastar">⋮⋮</span>
-        <input type="text" class="title-input" placeholder="Título da habilidade" data-hab-i="${i}" data-hab-k="titulo" value="${escapeHtml(h.titulo||'')}">
-        <button class="icon-btn del" data-del-hab="${i}" title="Remover habilidade">✕</button>
-      </div>
-      <textarea placeholder="Descrição..." data-hab-i="${i}" data-hab-k="descricao">${escapeHtml(h.descricao||'')}</textarea>
-      <div class="resize-handle" title="Redimensionar"></div>
-    `;
-    canvas.appendChild(card);
-  });
-
-  // Wire text inputs
-  canvas.querySelectorAll('[data-hab-i]').forEach(inp => {
-    inp.addEventListener('input', e => {
-      const i = parseInt(e.target.dataset.habI);
-      const k = e.target.dataset.habK;
-      habilidades[i][k] = e.target.value;
-      save();
-    });
-  });
-  // Delete
-  canvas.querySelectorAll('[data-del-hab]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      habilidades.splice(parseInt(e.currentTarget.dataset.delHab), 1);
-      renderHabilidades();
-      save();
-    });
-  });
-  // Drag from the whole top-row (skips inputs/buttons via startDrag check)
-  canvas.querySelectorAll('.habilidade-card').forEach(card => {
-    const topRow = card.querySelector('.top-row');
-    topRow.addEventListener('pointerdown', startDrag);
-    const resize = card.querySelector('.resize-handle');
-    resize.addEventListener('pointerdown', startResize);
-  });
-
-  resizeCanvas();
-}
-
-// Global drag/resize state — document-level events for reliability
-let _drag = null;
-
-function startDrag(e) {
-  // Skip if clicking on interactive children (input, button, textarea)
-  if (e.target.closest('input, textarea, button, .resize-handle')) return;
-  // Only left mouse button
-  if (e.button !== undefined && e.button !== 0) return;
-  e.preventDefault();
-  const card = e.currentTarget.closest('.habilidade-card');
-  if (!card) return;
-  const canvas = document.getElementById('habilidades-canvas');
-  _drag = {
-    type: 'move',
-    card,
-    canvas,
-    idx: parseInt(card.dataset.habIdx),
-    startX: e.clientX,
-    startY: e.clientY,
-    startLeft: card.offsetLeft,
-    startTop: card.offsetTop,
-    startScrollTop: canvas.scrollTop,
-    startScrollLeft: canvas.scrollLeft
-  };
-  card.classList.add('dragging');
-}
-
-function startResize(e) {
-  if (e.button !== undefined && e.button !== 0) return;
-  e.preventDefault();
-  e.stopPropagation();
-  const card = e.currentTarget.closest('.habilidade-card');
-  if (!card) return;
-  const canvas = document.getElementById('habilidades-canvas');
-  _drag = {
-    type: 'resize',
-    card,
-    canvas,
-    idx: parseInt(card.dataset.habIdx),
-    startX: e.clientX,
-    startY: e.clientY,
-    startW: card.offsetWidth,
-    startH: card.offsetHeight,
-    startScrollTop: canvas.scrollTop,
-    startScrollLeft: canvas.scrollLeft
-  };
-}
-
-function onPointerMove(e) {
-  if (!_drag) return;
-  e.preventDefault();
-  const { type, card, canvas } = _drag;
-  // Compensate for any canvas scrolling that happened mid-drag
-  const scrollDX = canvas.scrollLeft - _drag.startScrollLeft;
-  const scrollDY = canvas.scrollTop - _drag.startScrollTop;
-  if (type === 'move') {
-    let nx = _drag.startLeft + (e.clientX - _drag.startX) + scrollDX;
-    let ny = _drag.startTop + (e.clientY - _drag.startY) + scrollDY;
-    if (nx < 0) nx = 0;
-    if (ny < 0) ny = 0;
-    card.style.left = nx + 'px';
-    card.style.top = ny + 'px';
-  } else if (type === 'resize') {
-    let nw = _drag.startW + (e.clientX - _drag.startX) + scrollDX;
-    let nh = _drag.startH + (e.clientY - _drag.startY) + scrollDY;
-    if (nw < 200) nw = 200;
-    if (nh < 140) nh = 140;
-    card.style.width = nw + 'px';
-    card.style.height = nh + 'px';
-  }
-}
-
-function onPointerUp(e) {
-  if (!_drag) return;
-  const { type, card, idx } = _drag;
-  card.classList.remove('dragging');
-  if (type === 'move') {
-    habilidades[idx].x = card.offsetLeft;
-    habilidades[idx].y = card.offsetTop;
-  } else if (type === 'resize') {
-    habilidades[idx].w = card.offsetWidth;
-    habilidades[idx].h = card.offsetHeight;
-  }
-  _drag = null;
-  resizeCanvas();
-  save();
-}
-
-// Attach document-level listeners ONCE (not per card)
-document.addEventListener('pointermove', onPointerMove);
-document.addEventListener('pointerup', onPointerUp);
-document.addEventListener('pointercancel', onPointerUp);
-
-document.getElementById('add-habilidade').addEventListener('click', () => {
-  // Place new card at auto position for the new index
-  const canvas = document.getElementById('habilidades-canvas');
-  const cw = canvas ? canvas.clientWidth : 800;
-  const pos = autoPlace(habilidades.length, cw);
-  habilidades.push({ titulo: '', descricao: '', x: pos.x, y: pos.y, w: HAB_DEFAULT_W, h: HAB_DEFAULT_H });
-  renderHabilidades();
-  save();
-  // focus the new title input
-  const inputs = document.querySelectorAll('#habilidades-canvas .title-input');
-  if (inputs.length) inputs[inputs.length - 1].focus();
-});
-
-// Re-render on window resize so auto-placed cards reflow
-window.addEventListener('resize', () => {
-  // Only reflow if some cards are unplaced; placed cards keep their position
-  // We still call render to update canvas height
-  renderHabilidades();
-});
-
-// ========== Spells ==========
-const OFFICIAL_SPELLS = Array.isArray(window.SPELL_COMPENDIUM) ? window.SPELL_COMPENDIUM : [];
-const SPELL_CLASS_LABELS_LOCAL = window.SPELL_CLASS_LABELS || {};
-const SPELL_CLASS_ORDER = ['bardo', 'bruxo', 'clerigo', 'druida', 'feiticeiro', 'mago', 'paladino', 'ranger'];
-const FULL_CASTER_CLASSES = new Set(['bardo', 'clerigo', 'druida', 'feiticeiro', 'mago']);
-
-function normalizeText(s) {
-  return String(s || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
-
-function initSpellControls() {
-  const select = document.getElementById('spell-class');
-  if (select) {
-    select.innerHTML = [
-      '<option value="custom">Classe customizada</option>',
-      ...SPELL_CLASS_ORDER.map(cls => `<option value="${cls}">${escapeHtml(SPELL_CLASS_LABELS_LOCAL[cls] || cls)}</option>`)
-    ].join('');
-    select.value = 'custom';
-    select.addEventListener('change', () => { renderSpellLevels(); save(); });
-  }
-  const lvl = document.getElementById('spell-class-level');
-  if (lvl) lvl.addEventListener('input', () => { renderSpellLevels(); save(); });
-  const search = document.getElementById('spell-search');
-  if (search) search.addEventListener('input', () => { renderSpellLevels(); save(); });
-}
-
-function normalizeSpellClassInput(rawValue) {
-  const select = document.getElementById('spell-class');
-  if (!select) return;
-  const raw = normalizeText(rawValue || select.value);
-  const aliases = {
-    bardo: 'bardo',
-    bard: 'bardo',
-    bruxo: 'bruxo',
-    warlock: 'bruxo',
-    clerigo: 'clerigo',
-    cleric: 'clerigo',
-    druida: 'druida',
-    druid: 'druida',
-    feiticeiro: 'feiticeiro',
-    sorcerer: 'feiticeiro',
-    mago: 'mago',
-    wizard: 'mago',
-    paladino: 'paladino',
-    paladin: 'paladino',
-    ranger: 'ranger',
-    patrulheiro: 'ranger',
-    custom: 'custom',
-    personalizada: 'custom',
-    personalizado: 'custom'
-  };
-  select.value = aliases[raw] || select.value || 'custom';
-}
-
-function ensureSpellState() {
-  SPELL_LEVELS.forEach(l => { if (!Array.isArray(spells[l.lvl])) spells[l.lvl] = []; });
-  if (!spells._slots || typeof spells._slots !== 'object' || Array.isArray(spells._slots)) spells._slots = {};
-  if (!spells._prepared || typeof spells._prepared !== 'object' || Array.isArray(spells._prepared)) spells._prepared = {};
-}
-
-function getSelectedSpellClass() {
-  const select = document.getElementById('spell-class');
-  return select && select.value ? select.value : 'custom';
-}
-
-function isOfficialSpellClass(cls) {
-  return SPELL_CLASS_ORDER.includes(cls);
-}
-
-function getClassLevel() {
-  const inp = document.getElementById('spell-class-level');
-  const value = inp ? parseInt(inp.value, 10) : 1;
-  if (isNaN(value)) return 1;
-  return Math.max(1, Math.min(20, value));
-}
-
-function allowedSpellLevelsForClass(cls, classLevel) {
-  const allowed = new Set();
-  if (!isOfficialSpellClass(cls)) {
-    SPELL_LEVELS.forEach(l => allowed.add(l.lvl));
-    return allowed;
-  }
-  if (cls === 'paladino' || cls === 'ranger') {
-    if (classLevel < 2) return allowed;
-    const max = classLevel >= 17 ? 5 : classLevel >= 13 ? 4 : classLevel >= 9 ? 3 : classLevel >= 5 ? 2 : 1;
-    for (let i = 1; i <= max; i++) allowed.add(i);
-    return allowed;
-  }
-  allowed.add(0);
-  if (cls === 'bruxo') {
-    const pactMax = classLevel >= 9 ? 5 : Math.max(1, Math.ceil(classLevel / 2));
-    for (let i = 1; i <= pactMax; i++) allowed.add(i);
-    if (classLevel >= 11) allowed.add(6);
-    if (classLevel >= 13) allowed.add(7);
-    if (classLevel >= 15) allowed.add(8);
-    if (classLevel >= 17) allowed.add(9);
-    return allowed;
-  }
-  if (FULL_CASTER_CLASSES.has(cls)) {
-    const max = Math.min(9, Math.ceil(classLevel / 2));
-    for (let i = 1; i <= max; i++) allowed.add(i);
-  }
-  return allowed;
-}
-
-function getSpellSearch() {
-  const input = document.getElementById('spell-search');
-  return normalizeText(input ? input.value : '');
-}
-
-function spellMatchesQuery(sp, query) {
-  if (!query) return true;
-  return normalizeText([
-    sp.nome, sp.english, sp.escola, sp.tempo, sp.alcance,
-    sp.componentes, sp.duracao, sp.material, sp.descricao
-  ].join(' ')).includes(query);
-}
-
-function customSpellMatchesQuery(sp, query) {
-  if (!query) return true;
-  return normalizeText([
-    sp.nome, sp.escola, sp.tempo, sp.alcance,
-    sp.componentes, sp.duracao, sp.material, sp.descricao
-  ].join(' ')).includes(query);
-}
-
-function isOfficialPrepared(id) {
-  ensureSpellState();
-  return !!spells._prepared[id];
-}
-
-function setOfficialPrepared(id, prepared) {
-  ensureSpellState();
-  if (prepared) spells._prepared[id] = true;
-  else delete spells._prepared[id];
-}
-
-function getVisibleSpellLevels() {
-  ensureSpellState();
-  const cls = getSelectedSpellClass();
-  if (!isOfficialSpellClass(cls)) return SPELL_LEVELS;
-  const allowed = allowedSpellLevelsForClass(cls, getClassLevel());
-  return SPELL_LEVELS.filter(lv => {
-    if (allowed.has(lv.lvl)) return true;
-    if (spells[lv.lvl] && spells[lv.lvl].length) return true;
-    const slot = spells._slots && spells._slots[lv.lvl];
-    return !!(slot && (slot.total || slot.used));
-  });
-}
-
-function getOfficialSpellsForLevel(lvl) {
-  const cls = getSelectedSpellClass();
-  if (!isOfficialSpellClass(cls)) return [];
-  const allowed = allowedSpellLevelsForClass(cls, getClassLevel());
-  if (!allowed.has(lvl)) return [];
-  const query = getSpellSearch();
-  return OFFICIAL_SPELLS
-    .filter(sp => sp.nivel === lvl && Array.isArray(sp.classes) && sp.classes.includes(cls))
-    .filter(sp => spellMatchesQuery(sp, query));
-}
-
-function renderSpellLevels() {
-  ensureSpellState();
-  const container = document.getElementById('spell-levels');
-  container.innerHTML = '';
-  const levels = getVisibleSpellLevels();
-  levels.forEach(lv => {
-    const section = document.createElement('div');
-    section.className = 'spell-level-section';
-    const isCantrip = lv.lvl === 0;
-    section.innerHTML = `
-      <div class="spell-level-header">
-        <div class="spell-level-title">
-          <div class="level-badge">${lv.lvl}</div>
-          <div>
-            <div class="name">${lv.name}</div>
-            ${lv.sub ? `<span class="sub">${lv.sub}</span>` : ''}
-          </div>
-        </div>
-        ${isCantrip ? '' : `
-          <div class="slot-tracker">
-            <span>Total</span>
-            <input type="number" data-slot-total="${lv.lvl}" value="${(spells._slots && spells._slots[lv.lvl]?.total) || ''}">
-            <span>Usados</span>
-            <input type="number" data-slot-used="${lv.lvl}" value="${(spells._slots && spells._slots[lv.lvl]?.used) || ''}">
-          </div>
-        `}
-      </div>
-      <div class="spell-cards" data-cards="${lv.lvl}"></div>
-      <button class="add-spell-btn" data-add-spell="${lv.lvl}">+ Adicionar Magia de ${isCantrip ? 'Truque' : (lv.lvl + 'º Círculo')}</button>
-    `;
-    container.appendChild(section);
-  });
-  // Render cards
-  levels.forEach(lv => renderSpellCards(lv.lvl));
-  // Wire add buttons
-  container.querySelectorAll('[data-add-spell]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const lvl = parseInt(e.target.dataset.addSpell);
-      spells[lvl].push(newSpell());
-      renderSpellLevels();
-      save();
-      const inputs = document.querySelectorAll(`[data-sp-l="${lvl}"][data-sp-k="nome"]`);
-      if (inputs.length) inputs[inputs.length - 1].focus();
-    });
-  });
-  // Wire slot inputs
-  container.querySelectorAll('[data-slot-total]').forEach(inp => {
-    inp.addEventListener('input', e => {
-      const lvl = parseInt(e.target.dataset.slotTotal);
-      if (!spells._slots) spells._slots = {};
-      if (!spells._slots[lvl]) spells._slots[lvl] = {};
-      spells._slots[lvl].total = e.target.value;
-      save();
-    });
-  });
-  container.querySelectorAll('[data-slot-used]').forEach(inp => {
-    inp.addEventListener('input', e => {
-      const lvl = parseInt(e.target.dataset.slotUsed);
-      if (!spells._slots) spells._slots = {};
-      if (!spells._slots[lvl]) spells._slots[lvl] = {};
-      spells._slots[lvl].used = e.target.value;
-      save();
-    });
-  });
-  renderSpellSummary();
-}
-
-function newSpell() {
-  return {
-    nome: '', escola: '', tempo: '', alcance: '',
-    componentes: '', duracao: '', material: '',
-    descricao: '', preparada: false
-  };
-}
-
-function officialSpellCard(sp) {
-  const prepared = isOfficialPrepared(sp.id);
-  return {
-    type: 'official',
-    name: sp.nome || '',
-    prepared,
-    spell: sp
-  };
-}
-
-function customSpellCard(sp, i, lvl) {
-  return {
-    type: 'custom',
-    name: sp.nome || '',
-    prepared: !!sp.preparada,
-    spell: sp,
-    index: i,
-    lvl
-  };
-}
-
-function renderSpellCards(lvl) {
-  const wrap = document.querySelector(`[data-cards="${lvl}"]`);
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  const query = getSpellSearch();
-  const officialCards = getOfficialSpellsForLevel(lvl).map(officialSpellCard);
-  const customCards = spells[lvl]
-    .map((sp, i) => customSpellCard(sp, i, lvl))
-    .filter(card => customSpellMatchesQuery(card.spell, query));
-  const cards = officialCards.concat(customCards).sort((a, b) => {
-    if (a.prepared !== b.prepared) return a.prepared ? -1 : 1;
-    if (a.type !== b.type) return a.type === 'official' ? -1 : 1;
-    return a.name.localeCompare(b.name, 'pt-BR');
-  });
-  if (!cards.length) {
-    const empty = document.createElement('div');
-    empty.className = 'spell-empty';
-    empty.textContent = 'Nenhuma magia neste círculo.';
-    wrap.appendChild(empty);
-    return;
-  }
-  cards.forEach(cardData => {
-    if (cardData.type === 'official') renderOfficialSpellCard(wrap, cardData.spell);
-    else renderCustomSpellCard(wrap, cardData.spell, cardData.index, lvl);
-  });
-  wireRenderedCustomSpellCards(wrap);
-}
-
-function renderOfficialSpellCard(wrap, sp) {
-  const prepared = isOfficialPrepared(sp.id);
-  const card = document.createElement('div');
-  card.className = 'spell-card official' + (prepared ? ' prepared' : '');
-  card.innerHTML = `
-    <div class="spell-card-top">
-      <div class="spell-card-title">
-        <div class="spell-name-display">${escapeHtml(sp.nome || '')}</div>
-        <div class="spell-school-display">${escapeHtml(sp.escola || '')}${sp.english ? ` · ${escapeHtml(sp.english)}` : ''}</div>
-      </div>
-      <span class="spell-origin">Oficial</span>
-    </div>
-    <div class="spell-meta">
-      <div class="spell-meta-item">${ICONS.time}<input type="text" readonly value="${escapeHtml(sp.tempo || '')}"></div>
-      <div class="spell-meta-item">${ICONS.range}<input type="text" readonly value="${escapeHtml(sp.alcance || '')}"></div>
-      <div class="spell-meta-item">${ICONS.comp}<input type="text" readonly value="${escapeHtml(sp.componentes || '')}"></div>
-      <div class="spell-meta-item">${ICONS.duration}<input type="text" readonly value="${escapeHtml(sp.duracao || '')}"></div>
-    </div>
-    ${sp.material ? `
-      <div class="material-row">
-        <span class="lbl">Material:</span>
-        <input type="text" readonly value="${escapeHtml(sp.material)}">
-      </div>
-    ` : ''}
-    <details class="spell-description">
-      <summary>Descrição</summary>
-      <div class="desc-body">${escapeHtml(sp.descricao || '')}</div>
-    </details>
-    <div class="card-actions">
-      <button class="btn prepare-btn ${prepared ? 'active' : ''}" data-prepare-official="${escapeHtml(sp.id)}">${prepared ? 'Preparada' : 'Preparar'}</button>
-    </div>
-  `;
-  wrap.appendChild(card);
-  card.querySelector('[data-prepare-official]').addEventListener('click', e => {
-    const id = e.currentTarget.dataset.prepareOfficial;
-    setOfficialPrepared(id, !isOfficialPrepared(id));
-    renderSpellLevels();
-    save();
-  });
-}
-
-function renderCustomSpellCard(wrap, sp, i, lvl) {
-    const card = document.createElement('div');
-    card.className = 'spell-card custom-spell' + (sp.preparada ? ' prepared' : '');
-    card.innerHTML = `
-      <div class="spell-card-top">
-        <input type="text" class="name-input" placeholder="Nome da Magia" data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="nome" value="${escapeHtml(sp.nome)}">
-        <input type="text" class="school-input" placeholder="escola, nível" data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="escola" value="${escapeHtml(sp.escola)}">
-        <span class="spell-origin">Personalizada</span>
-      </div>
-      <div class="spell-meta">
-        <div class="spell-meta-item">${ICONS.time}<input type="text" placeholder="Tempo de Conj." data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="tempo" value="${escapeHtml(sp.tempo)}"></div>
-        <div class="spell-meta-item">${ICONS.range}<input type="text" placeholder="Alcance" data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="alcance" value="${escapeHtml(sp.alcance)}"></div>
-        <div class="spell-meta-item">${ICONS.comp}<input type="text" placeholder="V, S, M" data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="componentes" value="${escapeHtml(sp.componentes)}"></div>
-        <div class="spell-meta-item">${ICONS.duration}<input type="text" placeholder="Duração" data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="duracao" value="${escapeHtml(sp.duracao)}"></div>
-      </div>
-      <div class="material-row">
-        <span class="lbl">Material:</span>
-        <input type="text" placeholder="componentes materiais (opcional)" data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="material" value="${escapeHtml(sp.material)}">
-      </div>
-      <textarea placeholder="Descrição da magia..." data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="descricao">${escapeHtml(sp.descricao)}</textarea>
-      <div class="card-actions">
-        <label class="prepared-toggle">
-          <input type="checkbox" data-sp-i="${i}" data-sp-l="${lvl}" data-sp-k="preparada" ${sp.preparada ? 'checked' : ''}>
-          Preparada
-        </label>
-        <button class="icon-btn del" data-del-sp-i="${i}" data-del-sp-l="${lvl}" title="Remover magia">✕</button>
-      </div>
-    `;
-    wrap.appendChild(card);
-}
-
-function wireRenderedCustomSpellCards(wrap) {
-  // Wire inputs
-  wrap.querySelectorAll('[data-sp-i]').forEach(inp => {
-    const evt = inp.type === 'checkbox' ? 'change' : 'input';
-    inp.addEventListener(evt, e => {
-      const i = parseInt(e.target.dataset.spI);
-      const l = parseInt(e.target.dataset.spL);
-      const k = e.target.dataset.spK;
-      spells[l][i][k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-      if (k === 'preparada') {
-        renderSpellCards(l);
-        renderSpellSummary();
-      }
-      save();
-    });
-  });
-  wrap.querySelectorAll('[data-del-sp-i]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const i = parseInt(e.currentTarget.dataset.delSpI);
-      const l = parseInt(e.currentTarget.dataset.delSpL);
-      spells[l].splice(i, 1);
-      renderSpellCards(l);
-      renderSpellSummary();
-      save();
-    });
-  });
-}
-
-function renderSpellSummary() {
-  const summary = document.getElementById('spell-summary');
-  if (!summary) return;
-  const cls = getSelectedSpellClass();
-  const classLevel = getClassLevel();
-  const official = isOfficialSpellClass(cls);
-  const allowed = allowedSpellLevelsForClass(cls, classLevel);
-  const visibleOfficial = official ? OFFICIAL_SPELLS.filter(sp => allowed.has(sp.nivel) && sp.classes.includes(cls)) : [];
-  const preparedOfficial = visibleOfficial.filter(sp => isOfficialPrepared(sp.id)).length;
-  const preparedCustom = SPELL_LEVELS.reduce((acc, lv) => acc + (spells[lv.lvl] || []).filter(sp => sp.preparada).length, 0);
-  const maxLevel = allowed.size ? Math.max(...Array.from(allowed)) : 0;
-  const classLabel = official ? (SPELL_CLASS_LABELS_LOCAL[cls] || cls) : 'Classe customizada';
-  const maxText = official
-    ? (maxLevel ? `até ${maxLevel === 0 ? 'truques' : maxLevel + 'º círculo'}` : 'sem magias por classe')
-    : 'lista manual';
-  summary.innerHTML = `
-    <span class="spell-chip"><strong>${escapeHtml(classLabel)}</strong></span>
-    <span class="spell-chip">Nível <strong>${classLevel}</strong></span>
-    <span class="spell-chip">${escapeHtml(maxText)}</span>
-    <span class="spell-chip">Oficiais <strong>${visibleOfficial.length}</strong></span>
-    <span class="spell-chip">Preparadas <strong>${preparedOfficial + preparedCustom}</strong></span>
-    ${official ? '' : '<span class="spell-chip muted">Personalizada</span>'}
-  `;
-}
-
-function escapeHtml(s) {
-  if (s === undefined || s === null) return '';
-  return String(s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-// ========== Save / Load ==========
-function collectState() {
-  const state = { fields: {}, attacks: attacks, habilidades: habilidades, habCanvasHeight: habCanvasHeight, spells: spells };
-  document.querySelectorAll('input[name], textarea[name], select[name]').forEach(el => {
-    if (el.type === 'checkbox') state.fields[el.name] = el.checked;
-    else state.fields[el.name] = el.value;
-  });
-  return state;
-}
-function cssEscape(s) {
-  if (typeof CSS !== 'undefined' && CSS.escape) return CSS.escape(s);
-  return String(s).replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c);
-}
-function applyState(state) {
-  if (!state || typeof state !== 'object') return;
-  if (state.fields) {
-    Object.entries(state.fields).forEach(([name, val]) => {
-      const el = document.querySelector(`[name="${cssEscape(name)}"]`);
-      if (!el) return;
-      if (el.type === 'checkbox') el.checked = !!val;
-      else el.value = val == null ? '' : val;
-    });
-  }
-  attacks = Array.isArray(state.attacks) ? state.attacks : [];
-  habilidades = Array.isArray(state.habilidades) ? state.habilidades : [];
-  habCanvasHeight = (typeof state.habCanvasHeight === 'number' && state.habCanvasHeight > 0) ? state.habCanvasHeight : 320;
-  applyCanvasHeight();
-  spells = (state.spells && typeof state.spells === 'object') ? state.spells : {};
-  normalizeSpellClassInput(state.fields ? state.fields.m_classe : null);
-  ensureSpellState();
-  renderAttacks();
-  renderHabilidades();
-  renderSpellLevels();
-  // Re-trigger modifier calc
-  document.querySelectorAll('.attr-box input.val').forEach(inp => inp.dispatchEvent(new Event('input')));
-}
-
-let saveTimer = null;
-function save() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); }
-    catch (e) { console.warn('save failed', e); }
-  }, 200);
-}
-
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    applyState(JSON.parse(raw));
-    return true;
-  } catch (e) { console.warn('load failed', e); return false; }
-}
-
-// Wire all inputs to save
-function wireSave() {
-  document.querySelectorAll('input[name], textarea[name], select[name]').forEach(el => {
-    const evt = el.type === 'checkbox' ? 'change' : 'input';
-    el.addEventListener(evt, save);
-  });
-}
-
-// ========== Toast ==========
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-// ========== Export / Import ==========
-document.getElementById('btn-export').addEventListener('click', () => {
-  const state = collectState();
-  const nome = (state.fields.nome_personagem || 'personagem').replace(/[^\w-]+/g, '_');
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `ficha_${nome}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('Ficha exportada');
-});
-
-document.getElementById('btn-import').addEventListener('click', () => {
-  document.getElementById('file-import').click();
-});
-document.getElementById('file-import').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const r = new FileReader();
-  r.onload = () => {
-    try {
-      const data = JSON.parse(r.result);
-      applyState(data);
-      save();
-      toast('Ficha importada');
-    } catch (err) {
-      toast('Erro ao importar JSON');
-    }
-  };
-  r.readAsText(file);
-  e.target.value = '';
-});
-
-document.getElementById('btn-clear').addEventListener('click', () => {
-  if (!confirm('Apagar todos os dados da ficha? Esta ação não pode ser desfeita.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  attacks = [];
-  habilidades = [];
-  habCanvasHeight = 320;
-  spells = {};
-  SPELL_LEVELS.forEach(l => spells[l.lvl] = []);
-  ensureSpellState();
-  document.querySelectorAll('input[name], textarea[name], select[name]').forEach(el => {
-    if (el.type === 'checkbox') el.checked = false;
-    else el.value = '';
-  });
-  const spellClass = document.getElementById('spell-class');
-  if (spellClass) spellClass.value = 'custom';
-  const spellClassLevel = document.getElementById('spell-class-level');
-  if (spellClassLevel) spellClassLevel.value = '1';
-  renderAttacks();
-  renderHabilidades();
-  renderSpellLevels();
-  document.querySelectorAll('.attr-box input.val').forEach(inp => inp.dispatchEvent(new Event('input')));
-  toast('Ficha limpa');
-});
-
-// ========== Init ==========
-initSpellControls();
-renderAttacks();
-renderHabilidades();
-renderSpellLevels();
-load();
-applyCanvasHeight();
-watchCanvasResize();
-wireSave();
-</script>
+<script src="scripts/spells-data.js"></script>
+<script src="scripts/config.js"></script>
+<script src="scripts/character.js"></script>
+<script src="scripts/attacks.js"></script>
+<script src="scripts/habilidades.js"></script>
+<script src="scripts/class-features.js"></script>
+<script src="scripts/spells.js"></script>
+<script src="scripts/storage.js"></script>
+<script src="scripts/feedback.js"></script>
+<script src="scripts/import-export.js"></script>
+<script src="scripts/main.js"></script>
 </body>
 </html>
