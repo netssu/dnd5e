@@ -23,6 +23,41 @@ document.querySelectorAll('.attr-box').forEach(box => {
   update();
 });
 
+function enhanceSkillRowsWithExpertise() {
+  document.querySelectorAll('.skills-card .row').forEach(row => {
+    const profInp = row.querySelector('input[type="checkbox"][name$="_p"]');
+    if (!profInp) return;
+    const base = profInp.name.replace(/_p$/, '');
+    if (row.querySelector('[name="' + base + '_e"]')) return;
+
+    const label = document.createElement('label');
+    label.className = 'skill-expertise';
+    label.title = 'Expertise (dobra o bônus de proficiência)';
+
+    const expInp = document.createElement('input');
+    expInp.type = 'checkbox';
+    expInp.name = base + '_e';
+    expInp.setAttribute('aria-label', 'Expertise em ' + base.replace(/^sk_/, '').replace(/_/g, ' '));
+
+    const badge = document.createElement('span');
+    badge.textContent = 'E';
+
+    label.appendChild(expInp);
+    label.appendChild(badge);
+    profInp.insertAdjacentElement('afterend', label);
+  });
+}
+
+function syncExpertiseState(base) {
+  const profInp = document.querySelector('[name="' + base + '_p"]');
+  const expInp = document.querySelector('[name="' + base + '_e"]');
+  if (!profInp || !expInp) return false;
+  if (!profInp.checked && expInp.checked) expInp.checked = false;
+  expInp.disabled = !profInp.checked;
+  return !!expInp.checked;
+}
+
+enhanceSkillRowsWithExpertise();
 
 // ========== Auto-fill skills & saves ==========
 const SKILL_ATTR_MAP = {
@@ -67,7 +102,8 @@ function recalcDerived() {
     if (!attrInp || !profInp || !valInp) return;
     if (attrInp.value === '' || attrInp.value === null) return; // don't write if no attribute set
     const mod = calcMod(attrInp.value);
-    const total = mod + (profInp.checked ? profBonus : 0);
+    const expertise = syncExpertiseState(base);
+    const total = mod + (profInp.checked ? profBonus * (expertise ? 2 : 1) : 0);
     valInp.value = total;
   });
 }
@@ -79,6 +115,8 @@ document.querySelectorAll('.attr-box input.val').forEach(inp => {
 Object.keys(SKILL_ATTR_MAP).forEach(base => {
   const cb = document.querySelector('[name="' + base + '_p"]');
   if (cb) cb.addEventListener('change', () => { recalcDerived(); save(); });
+  const exp = document.querySelector('[name="' + base + '_e"]');
+  if (exp) exp.addEventListener('change', () => { recalcDerived(); save(); });
 });
 const _profInp = document.querySelector('[name="prof_bonus"]');
 if (_profInp) _profInp.addEventListener('input', () => { recalcDerived(); save(); });

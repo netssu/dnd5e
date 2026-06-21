@@ -426,6 +426,45 @@
     padding: 4px 2px;
     font-size: 13px;
   }
+  .skill-expertise {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    cursor: pointer;
+  }
+  .skill-expertise input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .skill-expertise span {
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    color: var(--text-mute);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .skill-expertise input:checked + span {
+    border-color: var(--gold);
+    color: var(--gold);
+    box-shadow: 0 0 8px var(--gold-glow);
+  }
+  .skill-expertise input:disabled + span {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
   .skills-card .row input.mod-val,
   .saves-card .row input.mod-val {
     width: 36px;
