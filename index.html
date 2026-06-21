@@ -593,6 +593,39 @@
   .four-col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
   @media (max-width: 900px) { .four-col { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 600px) { .four-col { grid-template-columns: 1fr; } }
+  .equipment-card {
+    display: grid;
+    gap: 12px;
+  }
+  .coin-section {
+    background: linear-gradient(180deg, rgba(212,175,55,0.08), rgba(20,19,15,0.55));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .coin-section-title {
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 1.2px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .coin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 8px;
+  }
+  .coin-field {
+    margin-bottom: 0;
+  }
+  .coin-field input {
+    text-align: center;
+    font-weight: 700;
+  }
+  .equipment-notes {
+    margin-bottom: 0;
+  }
 
   .passive-row {
     display: flex;
@@ -1514,9 +1547,22 @@
         <button class="btn" id="add-attack" style="margin-top: 8px; width: 100%;">+ Adicionar Ataque</button>
       </div>
 
-      <div class="card" style="margin-bottom: 12px;">
+      <div class="card equipment-card" style="margin-bottom: 12px;">
         <div class="card-title">Equipamento</div>
-        <textarea name="equipamento" rows="6" placeholder="Liste seu equipamento..."></textarea>
+        <div class="coin-section">
+          <div class="coin-section-title">Moedas</div>
+          <div class="coin-grid">
+            <label class="field coin-field"><span class="lbl">Platina (PP)</span><input type="number" name="moeda_pp" min="0" placeholder="0"></label>
+            <label class="field coin-field"><span class="lbl">Ouro (GP)</span><input type="number" name="moeda_gp" min="0" placeholder="0"></label>
+            <label class="field coin-field"><span class="lbl">Electrum (EP)</span><input type="number" name="moeda_ep" min="0" placeholder="0"></label>
+            <label class="field coin-field"><span class="lbl">Prata (SP)</span><input type="number" name="moeda_sp" min="0" placeholder="0"></label>
+            <label class="field coin-field"><span class="lbl">Cobre (CP)</span><input type="number" name="moeda_cp" min="0" placeholder="0"></label>
+          </div>
+        </div>
+        <label class="field equipment-notes">
+          <span class="lbl">Itens e provisões</span>
+          <textarea name="equipamento" rows="6" placeholder="Liste seu equipamento..."></textarea>
+        </label>
       </div>
 
     </div>
