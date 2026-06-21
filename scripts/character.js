@@ -100,9 +100,9 @@ function recalcDerived() {
     const profInp = document.querySelector('[name="' + base + '_p"]');
     const valInp = document.querySelector('[name="' + base + '_v"]');
     if (!attrInp || !profInp || !valInp) return;
+    const expertise = syncExpertiseState(base);
     if (attrInp.value === '' || attrInp.value === null) return; // don't write if no attribute set
     const mod = calcMod(attrInp.value);
-    const expertise = syncExpertiseState(base);
     const total = mod + (profInp.checked ? profBonus * (expertise ? 2 : 1) : 0);
     valInp.value = total;
   });
@@ -120,3 +120,4 @@ Object.keys(SKILL_ATTR_MAP).forEach(base => {
 });
 const _profInp = document.querySelector('[name="prof_bonus"]');
 if (_profInp) _profInp.addEventListener('input', () => { recalcDerived(); save(); });
+recalcDerived();
